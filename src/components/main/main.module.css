@@ -1,0 +1,228 @@
+/* src/components/main/main.module.css */
+
+/* --- SearchBar 스타일 --- */
+.searchContainer {
+  display: flex;
+  justify-content: center;
+  margin: 60px 0 50px;
+}
+
+.searchBox {
+  width: 650px;
+  height: 55px;
+  display: flex;
+  align-items: center;
+  background: var(--card-bg);
+  padding: 0 25px;
+  border-radius: 30px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.03); /* 은은하고 고급스러운 그림자 */
+  border: 1px solid rgba(0,0,0,0.02);
+  transition: all 0.3s ease;
+}
+
+.searchBox:focus-within {
+  box-shadow: 0 10px 30px rgba(99, 102, 241, 0.15); /* 포커스 시 포인트 컬러 그림자 */
+  transform: translateY(-2px);
+}
+
+.searchIcon {
+  font-size: 1.2rem;
+  color: var(--primary-color);
+}
+
+.searchInput {
+  flex: 1;
+  border: none;
+  outline: none;
+  padding: 0 15px;
+  font-size: 1.05rem;
+  background: transparent;
+  color: var(--text-main);
+}
+
+.searchInput::placeholder {
+  color: var(--text-sub);
+  opacity: 0.7;
+}
+
+.addBtn {
+  background: var(--primary-light);
+  color: var(--primary-color);
+  border: none;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  font-size: 1.5rem;
+  font-weight: bold;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+}
+
+.addBtn:hover {
+  background: var(--primary-color);
+  color: white;
+  transform: rotate(90deg); /* 마우스 올리면 살짝 돌아가는 귀여운 애니메이션 */
+}
+
+/* --- BookSection (랭킹/신작 탭 & 카드) 스타일 --- */
+.bookSection {
+  max-width: 1000px; /* 조금 더 넓게 */
+  margin: 0 auto 60px;
+  background: transparent; 
+}
+
+.tabHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  margin-bottom: 25px;
+  padding-bottom: 15px;
+  border-bottom: 2px solid rgba(0,0,0,0.05);
+}
+
+.tabs {
+  display: flex;
+  gap: 25px;
+}
+
+.tab {
+  background: none;
+  border: none;
+  font-size: 1.3rem;
+  font-weight: 600;
+  color: var(--text-sub);
+  cursor: pointer;
+  padding: 5px 0;
+  transition: color 0.2s;
+}
+
+.activeTab {
+  background: none;
+  border: none;
+  font-size: 1.3rem;
+  font-weight: 800;
+  color: var(--text-main);
+  cursor: pointer;
+  padding: 5px 0;
+  position: relative;
+}
+
+.activeTab::after {
+  content: '';
+  position: absolute;
+  bottom: -17px;
+  left: 0;
+  width: 100%;
+  height: 4px;
+  background-color: var(--primary-color); /* 활성화된 탭 밑줄 */
+  border-radius: 2px;
+}
+
+.moreBtn {
+  font-size: 0.95rem;
+  font-weight: 500;
+  color: var(--text-sub);
+  cursor: pointer;
+  transition: color 0.2s;
+}
+
+.moreBtn:hover {
+  color: var(--primary-color);
+}
+
+.carouselContainer {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+.arrowBtn {
+  background: var(--card-bg);
+  border: 1px solid rgba(0,0,0,0.05);
+  color: var(--text-sub);
+  border-radius: 50%;
+  width: 45px;
+  height: 45px;
+  font-size: 1.2rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.03);
+  transition: all 0.2s;
+}
+
+.arrowBtn:hover {
+  background: var(--primary-color);
+  color: white;
+  transform: scale(1.1);
+  border-color: var(--primary-color);
+}
+
+.cardList {
+  display: flex;
+  gap: 24px;
+  flex: 1;
+  overflow: hidden;
+  padding: 10px 0; /* 그림자가 잘리지 않게 여백 추가 */
+}
+
+/* --- 개별 카드 스타일 --- */
+.card {
+  flex: 1;
+  background: var(--card-bg);
+  border-radius: 16px; /* 모서리를 더 부드럽게 */
+  overflow: hidden;
+  box-shadow: 0 8px 20px rgba(0,0,0,0.04);
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+  border: 1px solid rgba(0,0,0,0.02);
+}
+
+.card:hover {
+  transform: translateY(-8px);
+  box-shadow: 0 15px 30px rgba(99, 102, 241, 0.12); /* 호버 시 떠오르는 느낌 */
+}
+
+.imageWrapper {
+  width: 100%;
+  aspect-ratio: 3 / 4;
+  background: #f1f5f9;
+  overflow: hidden;
+}
+
+.imageWrapper img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.4s ease;
+}
+
+.card:hover .imageWrapper img {
+  transform: scale(1.08);
+}
+
+.cardInfo {
+  padding: 20px 15px;
+  text-align: center;
+}
+
+.cardInfo h4 {
+  margin: 0 0 8px 0;
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--text-main);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.cardInfo p {
+  margin: 0;
+  font-size: 0.9rem;
+  color: var(--text-sub);
+  font-weight: 500;
+}
