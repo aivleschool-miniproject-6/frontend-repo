@@ -1,13 +1,16 @@
-import SearchBar from './SearchBar';
-import BookSection from './BookSection';
+import { useNavigate } from 'react-router-dom'
+import SearchBar from './SearchBar'
+import BookSection from './BookSection'
 
 const Main = () => {
+  const navigate = useNavigate()
+
   return (
     <div>
       <SearchBar />
-      <BookSection /> {/*   도서 랭킹 1,2,3 지정해보기 */} 
+      <BookSection onBookClick={(book) => navigate(`/books/${book.id}`)} />
     </div>
-  );
-};
+  )
+}
 
-export default Main;
+export default Main
