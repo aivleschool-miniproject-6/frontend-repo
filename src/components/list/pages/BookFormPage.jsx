@@ -5,6 +5,7 @@ import {
   LIGHTING_PRESETS,
   TYPOGRAPHY_PRESETS,
   buildStructuredPrompt,
+  compressImageDataUrl,
   generateBookCover,
 } from '../../../util/bookCoverService'
 
@@ -172,7 +173,9 @@ export default function BookFormPage({ mode, id, onBack, onSaved }) {
   const handleSave = async () => {
     if (!validate()) return
     const now = new Date().toISOString()
-    const coverImageUrl = (!isEdit && selectedImageIndex !== null) ? generatedImages[selectedImageIndex] : ''
+    const coverImageUrl = (!isEdit && selectedImageIndex !== null)
+      ? await compressImageDataUrl(generatedImages[selectedImageIndex])
+      : ''
     const body = {
       ...form,
       price: form.price ? Number(form.price) : null,
@@ -181,19 +184,23 @@ export default function BookFormPage({ mode, id, onBack, onSaved }) {
       ...(isEdit ? {} : { createdAt: now, coverImageUrl }),
     }
 
-    if (isEdit) {
-      await fetch(`${API}/${id}`, {
+    const res = isEdit
+      ? await fetch(`${API}/${id}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(body),
       })
-    } else {
-      await fetch(API, {
+      : await fetch(API, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(body),
       })
+
+    if (!res.ok) {
+      alert('저장에 실패했습니다. json-server가 실행 중인지 확인하세요.')
+      return
     }
+
     onSaved()
   }
 

@@ -7,6 +7,7 @@ import {
   LIGHTING_PRESETS,
   TYPOGRAPHY_PRESETS,
   buildStructuredPrompt,
+  compressImageDataUrl,
   generateBookCover,
 } from '../../util/bookCoverService'
 
@@ -115,13 +116,14 @@ const BookCoverEditor = () => {
 
     try {
       const targetId = id || 101;
+      const coverImageUrl = await compressImageDataUrl(generatedImages[selectedImageIndex]);
       const response = await fetch(`http://localhost:5000/books/${targetId}`, {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          coverImageUrl: generatedImages[selectedImageIndex]
+          coverImageUrl
         }),
       });
 

@@ -1,4 +1,5 @@
 ﻿import { useEffect, useMemo, useState } from 'react'
+import { useSearchParams } from 'react-router-dom'
 import Sidebar from '../components/Sidebar'
 import BookCard from '../components/BookCard'
 import BookListItem from '../components/BookListItem'
@@ -7,6 +8,11 @@ import styles from './BookListPage.module.css'
 const API = 'http://localhost:5000/books'
 const ALL = 'ALL'
 const FAVORITES = 'FAVORITES'
+
+function toTime(value) {
+  const time = value ? new Date(value).getTime() : 0
+  return Number.isNaN(time) ? 0 : time
+}
 
 function readFavoriteIds() {
   const ids = new Set()
@@ -20,11 +26,12 @@ function readFavoriteIds() {
 }
 
 export default function BookListPage({ onClickNew, onClickBook }) {
+  const [searchParams] = useSearchParams()
   const [books, setBooks] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
   const [genre, setGenre] = useState(ALL)
-  const [query, setQuery] = useState('')
+  const [query, setQuery] = useState(searchParams.get('search') || '')
   const [view, setView] = useState('grid')
   const [favoriteIds, setFavoriteIds] = useState(() => readFavoriteIds())
   const [sortBy, setSortBy] = useState('register')
@@ -83,7 +90,7 @@ export default function BookListPage({ onClickNew, onClickBook }) {
     const arr = [...filtered]
     if (sortBy === 'title') return arr.sort((a, b) => a.title?.localeCompare(b.title || '', 'ko'))
     if (sortBy === 'price') return arr.sort((a, b) => (a.price || 0) - (b.price || 0))
-    return arr.sort((a, b) => Number(b.id) - Number(a.id))
+    return arr.sort((a, b) => toTime(b.createdAt) - toTime(a.createdAt) || Number(b.id) - Number(a.id))
   }, [filtered, sortBy])
 
   return (

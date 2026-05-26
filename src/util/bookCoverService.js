@@ -96,3 +96,35 @@ export async function generateBookCover(apiKey, prompt) {
   // React 상태와 json-server PATCH로 바로 넘겨줄 수 있는 Data URL 포맷으로 변환햐서 반환
   return `data:image/png;base64,${b64Json}`;
 }
+
+export async function compressImageDataUrl(dataUrl, maxBytes = 75000) {
+  if (!dataUrl?.startsWith('data:image/')) return dataUrl || '';
+  if (dataUrl.length <= maxBytes) return dataUrl;
+
+  const image = await new Promise((resolve, reject) => {
+    const img = new Image();
+    img.onload = () => resolve(img);
+    img.onerror = () => reject(new Error('이미지를 압축할 수 없습니다.'));
+    img.src = dataUrl;
+  });
+
+  const canvas = document.createElement('canvas');
+  const ctx = canvas.getContext('2d');
+  const aspect = image.height / image.width || 1.5;
+  const widths = [360, 320, 280, 240, 200, 180];
+  const qualities = [0.72, 0.62, 0.52, 0.42, 0.34];
+
+  for (const width of widths) {
+    canvas.width = width;
+    canvas.height = Math.round(width * aspect);
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.drawImage(image, 0, 0, canvas.width, canvas.height);
+
+    for (const quality of qualities) {
+      const compressed = canvas.toDataURL('image/jpeg', quality);
+      if (compressed.length <= maxBytes) return compressed;
+    }
+  }
+
+  return canvas.toDataURL('image/jpeg', 0.28);
+}
