@@ -14,7 +14,7 @@
       "pages": 247,
       "isbn": "9788936434120",
       "pubDate": "2007-06-01",
-      "viewCount": 1
+      "viewCount": 2
     },
     {
       "id": "2",
@@ -30,7 +30,7 @@
       "pages": 216,
       "isbn": "9788936434267",
       "pubDate": "2014-05-19",
-      "viewCount": 1
+      "viewCount": 3
     },
     {
       "id": "3",
@@ -46,7 +46,7 @@
       "pages": 264,
       "isbn": "9788936437695",
       "pubDate": "2017-03-27",
-      "viewCount": 4
+      "viewCount": 7
     },
     {
       "id": "4",
@@ -62,7 +62,7 @@
       "pages": 527,
       "isbn": "9788970128047",
       "pubDate": "2022-07-06",
-      "viewCount": 2
+      "viewCount": 5
     },
     {
       "id": "5",
@@ -94,7 +94,7 @@
       "pages": 136,
       "isbn": "9788932905570",
       "pubDate": "2015-03-01",
-      "viewCount": 0
+      "viewCount": 1
     },
     {
       "id": "7",
@@ -1918,7 +1918,7 @@
       "pages": 368,
       "isbn": "9788969090010",
       "pubDate": "2013-07-29",
-      "viewCount": 0
+      "viewCount": 1
     }
   ],
   "$schema": "./node_modules/json-server/schema.json"
