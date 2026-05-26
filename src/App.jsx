@@ -1,9 +1,22 @@
-import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, useNavigate } from 'react-router-dom';
 import { Box } from '@mui/material';
 import Header from './components/common/Header/Header';
 import Home from './components/pages/Home';
-import BookList from './components/pages/BookList';
-import BookForm from './components/pages/BookForm';
+import BookListPage from './components/list/pages/BookListPage';
+import BookFormPage from './components/list/pages/BookFormPage';
+
+function BookListRoute() {
+  const navigate = useNavigate();
+
+  return <BookListPage onClickNew={() => navigate('/books/new')} />;
+}
+
+function BookFormRoute() {
+  const navigate = useNavigate();
+  const goList = () => navigate('/books');
+
+  return <BookFormPage mode="new" onBack={goList} onSaved={goList} />;
+}
 
 function App() {
   return (
@@ -16,8 +29,8 @@ function App() {
       <Box component="main" sx={{ pt: '64px' }}>
         <Routes>
           <Route path="/" element={<Home />} />
-          <Route path="/books" element={<BookList />} />
-          <Route path="/books/new" element={<BookForm />} />
+          <Route path="/books" element={<BookListRoute />} />
+          <Route path="/books/new" element={<BookFormRoute />} />
         </Routes>
       </Box>
     </BrowserRouter>
