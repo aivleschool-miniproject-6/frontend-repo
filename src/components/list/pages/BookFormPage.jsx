@@ -128,7 +128,7 @@ export default function BookFormPage({ mode, id, onBack, onSaved }) {
       price: form.price ? Number(form.price) : null,
       pages: form.pages ? Number(form.pages) : null,
       updatedAt: now,
-      ...(isEdit ? {} : { createdAt: now, coverImageUrl: '' }),
+      ...(isEdit ? {} : { createdAt: now, coverImageUrl: '', viewCount: 0 }),
     }
 
     if (isEdit) {

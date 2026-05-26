@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { fmtDate, getCoverColor } from '../list/components/BookCard'
 
 const API = 'http://localhost:5000/books'
@@ -290,12 +290,13 @@ const s = {
 }
 
 export default function BookDetail({ id, onBack, onEdit, onEditCover, onDeleted }) {
+  const viewedBookIds = useRef(new Set())
   const [book, setBook] = useState(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
   const [showDeleteModal, setShowDeleteModal] = useState(false)
   const [favorite, setFavorite] = useState(() => localStorage.getItem(`bookFavorite:${id}`) === 'true')
-  const [views, setViews] = useState(() => Number(localStorage.getItem(`bookViews:${id}`) || 0))
+  const [views, setViews] = useState(0)
 
   useEffect(() => {
     const load = async () => {
@@ -305,7 +306,27 @@ export default function BookDetail({ id, onBack, onEdit, onEditCover, onDeleted 
         const res = await fetch(`${API}/${id}`)
         if (!res.ok) throw new Error('책 정보를 찾을 수 없습니다.')
         const data = await res.json()
-        setBook(data)
+        const currentViews = Number(data.viewCount || 0)
+
+        if (viewedBookIds.current.has(String(id))) {
+          setBook(data)
+          setViews(currentViews)
+          return
+        }
+
+        viewedBookIds.current.add(String(id))
+        const nextViews = currentViews + 1
+        const patchRes = await fetch(`${API}/${id}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ viewCount: nextViews }),
+        })
+
+        if (!patchRes.ok) throw new Error('조회수 업데이트에 실패했습니다.')
+        const updatedBook = await patchRes.json()
+
+        setBook(updatedBook)
+        setViews(Number(updatedBook.viewCount || nextViews))
       } catch (e) {
         setError(e.message)
       } finally {
@@ -314,13 +335,6 @@ export default function BookDetail({ id, onBack, onEdit, onEditCover, onDeleted 
     }
 
     load()
-  }, [id])
-
-  useEffect(() => {
-    const nextViews = views + 1
-    setViews(nextViews)
-    localStorage.setItem(`bookViews:${id}`, String(nextViews))
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id])
 
   useEffect(() => {
