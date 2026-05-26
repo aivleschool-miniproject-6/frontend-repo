@@ -1,9 +1,23 @@
-import { useState, useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import Sidebar from '../components/Sidebar'
 import BookCard from '../components/BookCard'
 import BookListItem from '../components/BookListItem'
 
 const API = 'http://localhost:5000/books'
+const FAVORITES = '즐겨찾기'
+
+function readFavoriteIds() {
+  const ids = new Set()
+
+  for (let i = 0; i < localStorage.length; i += 1) {
+    const key = localStorage.key(i)
+    if (key?.startsWith('bookFavorite:') && localStorage.getItem(key) === 'true') {
+      ids.add(key.replace('bookFavorite:', ''))
+    }
+  }
+
+  return ids
+}
 
 const styles = {
   shell: {
@@ -144,15 +158,15 @@ const styles = {
   },
 }
 
-export default function BookListPage({ onClickNew }) {
+export default function BookListPage({ onClickNew, onClickBook }) {
   const [books, setBooks] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
   const [genre, setGenre] = useState('전체')
   const [query, setQuery] = useState('')
   const [view, setView] = useState('grid')
+  const [favoriteIds, setFavoriteIds] = useState(() => readFavoriteIds())
 
-  // ── GET /books ──
   useEffect(() => {
     const load = async () => {
       try {
@@ -167,22 +181,43 @@ export default function BookListPage({ onClickNew }) {
         setLoading(false)
       }
     }
+
     load()
   }, [])
 
-  // ── DELETE /books/:id ──
+  useEffect(() => {
+    const refreshFavorites = () => setFavoriteIds(readFavoriteIds())
+
+    window.addEventListener('focus', refreshFavorites)
+    window.addEventListener('storage', refreshFavorites)
+    window.addEventListener('bookFavoriteChange', refreshFavorites)
+    refreshFavorites()
+
+    return () => {
+      window.removeEventListener('focus', refreshFavorites)
+      window.removeEventListener('storage', refreshFavorites)
+      window.removeEventListener('bookFavoriteChange', refreshFavorites)
+    }
+  }, [])
+
   const handleDelete = async (id) => {
     if (!window.confirm('정말 삭제하시겠습니까?')) return
     await fetch(`${API}/${id}`, { method: 'DELETE' })
+    localStorage.removeItem(`bookFavorite:${id}`)
+    setFavoriteIds(readFavoriteIds())
     setBooks((prev) => prev.filter((b) => b.id !== id))
   }
 
-  const filtered = books.filter((b) => {
-    const genreOk = genre === '전체' || b.genre === genre
+  const filtered = books.filter((book) => {
+    const genreOk =
+      genre === '전체' ||
+      (genre === FAVORITES ? favoriteIds.has(String(book.id)) : book.genre === genre)
+    const lowerQuery = query.toLowerCase()
     const queryOk =
       !query ||
-      b.title.toLowerCase().includes(query.toLowerCase()) ||
-      b.author.toLowerCase().includes(query.toLowerCase())
+      book.title?.toLowerCase().includes(lowerQuery) ||
+      book.author?.toLowerCase().includes(lowerQuery)
+
     return genreOk && queryOk
   })
 
@@ -191,11 +226,11 @@ export default function BookListPage({ onClickNew }) {
       <Sidebar
         genre={genre}
         books={books}
+        favoriteIds={favoriteIds}
         onSelectGenre={setGenre}
       />
 
       <div style={styles.main}>
-        {/* 상단바 */}
         <div style={styles.topbar}>
           <span style={styles.title}>
             {genre === '전체' ? '전체 도서' : genre}
@@ -205,14 +240,13 @@ export default function BookListPage({ onClickNew }) {
             <input
               style={styles.searchInput}
               type="text"
-              placeholder="제목, 저자..."
+              placeholder="제목, 저자 검색"
               value={query}
               onChange={(e) => setQuery(e.target.value)}
             />
           </div>
         </div>
 
-        {/* 서브바 */}
         <div style={styles.subbar}>
           <div style={styles.subLeft}>
             <span style={styles.cnt}>총 {filtered.length}권</span>
@@ -226,28 +260,33 @@ export default function BookListPage({ onClickNew }) {
             <button
               style={styles.toggleBtn(view === 'grid')}
               onClick={() => setView('grid')}
-              title="크게 보기"
+              title="격자 보기"
             >
               <i className="ti ti-layout-grid" style={{ fontSize: 16 }} />
             </button>
             <button
               style={styles.toggleBtnLast(view === 'list')}
               onClick={() => setView('list')}
-              title="상세히 보기"
+              title="목록 보기"
             >
               <i className="ti ti-menu-2" style={{ fontSize: 16 }} />
             </button>
           </div>
         </div>
 
-        {/* 콘텐츠 */}
         <div style={styles.content}>
           {loading && <div style={styles.loading}>불러오는 중...</div>}
-          {error && <div style={styles.error}>오류: {error}<br />json-server가 실행 중인지 확인하세요.</div>}
+          {error && (
+            <div style={styles.error}>
+              오류: {error}
+              <br />
+              json-server가 실행 중인지 확인하세요.
+            </div>
+          )}
           {!loading && !error && filtered.length === 0 && (
             <div style={styles.empty}>
               <i className="ti ti-book-off" style={{ fontSize: 32, display: 'block', marginBottom: 10 }} />
-              해당 도서가 없습니다.
+              {genre === FAVORITES ? '즐겨찾기한 도서가 없습니다.' : '해당 도서가 없습니다.'}
             </div>
           )}
 
@@ -258,6 +297,7 @@ export default function BookListPage({ onClickNew }) {
                   key={book.id}
                   book={book}
                   rank={i + 1}
+                  onClick={() => onClickBook?.(book)}
                   onDelete={() => handleDelete(book.id)}
                 />
               ))}
@@ -271,6 +311,7 @@ export default function BookListPage({ onClickNew }) {
                   key={book.id}
                   book={book}
                   rank={i + 1}
+                  onClick={() => onClickBook?.(book)}
                   onDelete={() => handleDelete(book.id)}
                 />
               ))}

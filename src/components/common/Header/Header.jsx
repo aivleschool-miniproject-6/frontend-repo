@@ -5,7 +5,6 @@ const navItems = [
   { label: '홈', path: '/' },
   { label: '목록', path: '/books' },
   { label: '등록', path: '/books/new' },
-  { label: '표지편집', path: '/cover-editor' },
 ]
 
 function Header() {

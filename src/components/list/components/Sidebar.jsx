@@ -1,7 +1,8 @@
-﻿const GENRES = ['전체', '소설', '인문', '에세이', '경제/경영', 'IT/컴퓨터', '자기계발']
+const GENRES = ['전체', '즐겨찾기', '소설', '인문', '에세이', '경제/경영', 'IT/컴퓨터', '자기계발']
 
 const GENRE_ICONS = {
   '전체': 'ti-layout-grid',
+  '즐겨찾기': 'ti-star',
   '소설': 'ti-book',
   '인문': 'ti-bulb',
   '에세이': 'ti-feather',
@@ -59,12 +60,13 @@ const styles = {
     border: 'none',
     textAlign: 'left',
     marginBottom: 2,
+    cursor: 'pointer',
   }),
   badge: (active) => ({
     marginLeft: 'auto',
     fontSize: 10,
-    background: active ? '#e6f1fb' : '#f5f5f4',
-    color: active ? '#0c447c' : '#6b6b67',
+    background: active ? '#fff7e8' : '#f5f5f4',
+    color: active ? '#9a5b00' : '#6b6b67',
     padding: '1px 7px',
     borderRadius: 20,
     border: active ? 'none' : '0.5px solid rgba(0,0,0,0.12)',
@@ -76,9 +78,12 @@ const styles = {
   },
 }
 
-export default function Sidebar({ genre, books, onSelectGenre }) {
-  const countByGenre = (g) =>
-    g === '전체' ? books.length : books.filter((b) => b.genre === g).length
+export default function Sidebar({ genre, books, favoriteIds = new Set(), onSelectGenre }) {
+  const countByGenre = (g) => {
+    if (g === '전체') return books.length
+    if (g === '즐겨찾기') return books.filter((book) => favoriteIds.has(String(book.id))).length
+    return books.filter((book) => book.genre === g).length
+  }
 
   return (
     <aside style={styles.sidebar}>
