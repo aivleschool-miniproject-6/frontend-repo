@@ -1,4 +1,12 @@
 import { useState, useEffect } from 'react'
+import {
+  STYLE_PRESETS,
+  BACKGROUND_PRESETS,
+  LIGHTING_PRESETS,
+  TYPOGRAPHY_PRESETS,
+  buildStructuredPrompt,
+  generateBookCover,
+} from '../../../util/bookCoverService'
 
 const API = 'http://localhost:5000/books'
 
@@ -80,6 +88,12 @@ export default function BookFormPage({ mode, id, onBack, onSaved }) {
   const [changed, setChanged] = useState(false)
   const [loading, setLoading] = useState(isEdit)
 
+  const [aiOptions, setAiOptions] = useState({ style: '수채화', background: '베이지', lighting: '자연광', typography3: '클래식 명조' })
+  const [aiPrompt, setAiPrompt] = useState('')
+  const [generatedImages, setGeneratedImages] = useState([null, null, null])
+  const [isGenerating, setIsGenerating] = useState(false)
+  const [selectedImageIndex, setSelectedImageIndex] = useState(null)
+
   // 수정 모드: 기존 데이터 로딩
   useEffect(() => {
     if (!isEdit) return
@@ -120,15 +134,51 @@ export default function BookFormPage({ mode, id, onBack, onSaved }) {
     return Object.keys(e).length === 0
   }
 
+  const handleGenerate = async () => {
+    if (!aiPrompt.trim()) {
+      alert('어떤 스타일의 표지를 원하시는지 프롬프트를 작성해주세요!')
+      return
+    }
+    const apiKey = import.meta.env.VITE_OPENAI_API_KEY
+    if (!apiKey) {
+      alert('.env 파일에 VITE_OPENAI_API_KEY를 설정해주세요.')
+      return
+    }
+    try {
+      setIsGenerating(true)
+      setSelectedImageIndex(null)
+      setGeneratedImages([null, null, null])
+      const combinedInfo = {
+        title: form.title,
+        author: form.author,
+        content: `[Book Story]: ${form.content} / [User Design Request]: ${aiPrompt}`,
+      }
+      const finalPrompt = buildStructuredPrompt(combinedInfo, aiOptions)
+      const newImages = await Promise.all([
+        generateBookCover(apiKey, finalPrompt),
+        generateBookCover(apiKey, finalPrompt),
+        generateBookCover(apiKey, finalPrompt),
+      ])
+      setGeneratedImages(newImages)
+    } catch (error) {
+      console.error(error)
+      alert(`이미지 생성 중 오류가 발생했습니다: ${error.message}`)
+      setGeneratedImages([null, null, null])
+    } finally {
+      setIsGenerating(false)
+    }
+  }
+
   const handleSave = async () => {
     if (!validate()) return
     const now = new Date().toISOString()
+    const coverImageUrl = (!isEdit && selectedImageIndex !== null) ? generatedImages[selectedImageIndex] : ''
     const body = {
       ...form,
       price: form.price ? Number(form.price) : null,
       pages: form.pages ? Number(form.pages) : null,
       updatedAt: now,
-      ...(isEdit ? {} : { createdAt: now, coverImageUrl: '', viewCount: 0 }),
+      ...(isEdit ? {} : { createdAt: now, coverImageUrl }),
     }
 
     if (isEdit) {
@@ -242,6 +292,88 @@ export default function BookFormPage({ mode, id, onBack, onSaved }) {
               <input style={s.input()} value={form.isbn} onChange={(e) => set('isbn', e.target.value)} placeholder="13자리 ISBN" maxLength={13} />
             </div>
           </div>
+
+          {/* AI 표지 생성 - 등록 모드 전용 */}
+          {!isEdit && (
+            <div style={s.card}>
+              <div style={s.sectionTitle}>
+                <i className="ti ti-wand" /> AI 표지 생성
+                <span style={{ fontSize: 11, fontWeight: 400, marginLeft: 4 }}>(선택)</span>
+              </div>
+
+              <div style={s.formGroup}>
+                <label style={s.label}>스타일</label>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+                  {Object.keys(STYLE_PRESETS).map((key) => (
+                    <button key={key} onClick={() => setAiOptions((p) => ({ ...p, style: key }))}
+                      style={{ padding: '4px 10px', borderRadius: 20, fontSize: 12, cursor: 'pointer', border: `0.5px solid ${aiOptions.style === key ? '#1a1a18' : 'rgba(0,0,0,0.22)'}`, background: aiOptions.style === key ? '#1a1a18' : '#fff', color: aiOptions.style === key ? '#fff' : '#1a1a18' }}>
+                      {key}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div style={s.formGroup}>
+                <label style={s.label}>배경 / 조명</label>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, alignItems: 'center' }}>
+                  {Object.keys(BACKGROUND_PRESETS).map((key) => (
+                    <button key={key} onClick={() => setAiOptions((p) => ({ ...p, background: key }))}
+                      style={{ padding: '4px 10px', borderRadius: 20, fontSize: 12, cursor: 'pointer', border: `0.5px solid ${aiOptions.background === key ? '#1a1a18' : 'rgba(0,0,0,0.22)'}`, background: aiOptions.background === key ? '#1a1a18' : '#fff', color: aiOptions.background === key ? '#fff' : '#1a1a18' }}>
+                      {key}
+                    </button>
+                  ))}
+                  <span style={{ color: '#ccc' }}>|</span>
+                  {Object.keys(LIGHTING_PRESETS).map((key) => (
+                    <button key={key} onClick={() => setAiOptions((p) => ({ ...p, lighting: key }))}
+                      style={{ padding: '4px 10px', borderRadius: 20, fontSize: 12, cursor: 'pointer', border: `0.5px solid ${aiOptions.lighting === key ? '#1a1a18' : 'rgba(0,0,0,0.22)'}`, background: aiOptions.lighting === key ? '#1a1a18' : '#fff', color: aiOptions.lighting === key ? '#fff' : '#1a1a18' }}>
+                      {key}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div style={s.formGroup}>
+                <label style={s.label}>타이포그래피</label>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+                  {Object.keys(TYPOGRAPHY_PRESETS).map((key) => (
+                    <button key={key} onClick={() => setAiOptions((p) => ({ ...p, typography: key }))}
+                      style={{ padding: '4px 10px', borderRadius: 20, fontSize: 12, cursor: 'pointer', border: `0.5px solid ${aiOptions.typography === key ? '#1a1a18' : 'rgba(0,0,0,0.22)'}`, background: aiOptions.typography === key ? '#1a1a18' : '#fff', color: aiOptions.typography === key ? '#fff' : '#1a1a18' }}>
+                      {key}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div style={s.formGroup}>
+                <label style={s.label}>프롬프트</label>
+                <textarea style={s.textarea(false)} placeholder="어떤 느낌의 표지를 원하시나요? 객체, 색감, 분위기 등을 자유롭게 적어주세요." value={aiPrompt} onChange={(e) => setAiPrompt(e.target.value)} />
+              </div>
+
+              <button onClick={handleGenerate} disabled={isGenerating}
+                style={{ width: '100%', padding: '10px 0', borderRadius: 8, fontSize: 13, fontWeight: 500, cursor: isGenerating ? 'not-allowed' : 'pointer', background: isGenerating ? '#aaa' : '#1a1a18', color: '#fff', border: 'none' }}>
+                {isGenerating ? '이미지 생성 중...' : '표지 후보 3장 생성하기'}
+              </button>
+
+              <div style={{ display: 'flex', gap: 12, marginTop: 16 }}>
+                {[0, 1, 2].map((i) => (
+                  <div key={i} onClick={() => generatedImages[i] && setSelectedImageIndex(i)}
+                    style={{ flex: 1, aspectRatio: '2/3', borderRadius: 8, overflow: 'hidden', border: `2px solid ${selectedImageIndex === i ? '#1a1a18' : 'rgba(0,0,0,0.1)'}`, background: '#f5f5f3', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: generatedImages[i] ? 'pointer' : 'default' }}>
+                    {isGenerating
+                      ? <span style={{ fontSize: 11, color: '#aaa' }}>생성 중...</span>
+                      : generatedImages[i]
+                        ? <img src={generatedImages[i]} alt={`표지 후보 ${i + 1}`} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                        : <span style={{ fontSize: 11, color: '#bbb' }}>Preview {i + 1}</span>}
+                  </div>
+                ))}
+              </div>
+
+              {selectedImageIndex !== null && (
+                <div style={{ fontSize: 12, color: '#1a1a18', marginTop: 8, textAlign: 'center', fontWeight: 500 }}>
+                  ✓ {selectedImageIndex + 1}번 이미지가 표지로 등록됩니다.
+                </div>
+              )}
+            </div>
+          )}
 
           <div style={s.foot}>
             <button style={s.cancelBtn} onClick={onBack}>취소</button>
