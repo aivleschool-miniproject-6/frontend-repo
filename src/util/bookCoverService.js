@@ -1,0 +1,98 @@
+// 스타일 프롬프트 프리셋
+export const STYLE_PRESETS = {
+  '수채화': 'Line Art (clean lines, delicate watercolor bleeding effects, minimalist aesthetic, subtle textures, high artistic quality)',
+  '3D애니메이션': '3D Animated style (vibrant colors, expressive characters, soft volumetric lighting, detailed clay-like rendering, rich textures)',
+  '유화': 'Oil Painting Classic (visible heavy brushstrokes, rich impasto texture, deep color palette, classic chiaroscuro lighting, canvas texture)',
+  '미니멀리즘': 'Modern Minimalism (bold geometric shapes, flat design elements, high contrast, elegant negative space, corporate vector art style)',
+  '빈티지': 'vintage pulp fiction (gritty textures, bold halftone patterns, dramatic chiaroscuro lighting, exaggerated character expressions, retro color palette)',
+  '일러스트': 'Warm Anime Illustration style (soft pastel colors, whimsical character design, hand-drawn textures, warm nostalgic lighting, dreamy atmosphere)'
+};
+// 배경 프롬프트 프리셋
+export const BACKGROUND_PRESETS = {
+  '베이지': 'Muted Warm Beige background (subtle watercolor paper texture, organic warm tones)',
+  '사이버틱': 'Dark Cyber Minimal background (deep obsidian dark space, neon light trails)',
+  '화이트': 'Pure Clean White background (sharp cast shadows, absolute clinical whitespace)',
+  '레트로': 'Retro Gradient background (vibrant sunset gradient with subtle grain texture)',
+  '자연': 'Lush Nature background (soft-focus forest with dappled sunlight, natural textures)',
+  '추상': 'Abstract Geometric background (bold geometric shapes in complementary colors, dynamic composition)'
+};
+
+// 조명 프롬프트 프리셋
+export const LIGHTING_PRESETS = {
+  '자연광': 'Soft Diffused Daylight (gentle natural lighting coming from top-left, pastel palette)',
+  '대비광': 'Cinematic High-Contrast (strong rim lighting, deep dramatic shadows)',
+  '따뜻한광': 'Warm Golden Hour (rich golden tones, long soft shadows, warm highlights)',
+};
+
+// 타이포그래피 프롬프트 프리셋
+export const TYPOGRAPHY_PRESETS = {
+  '클래식 명조': 'Serif Classic Typography layout (book title written in elegant Serif typeface at top-center in large letters)',
+  '모던 고딕': 'Sans-Serif Minimal Typography layout (book title positioned dynamically in the center space)',
+  '감성 손글씨': 'Handwritten Script Typography layout (book title in flowing handwritten script, artistically integrated with the illustration)',
+};
+
+// 품질 유지를 위한 방어벽 키워드 (고정값)
+const TECHNICAL_DEFAULT = '85mm portrait lens at f/1.8, razor-sharp focus, cinematic background bokeh.';
+const NEGATIVE_DEFAULT = 'low quality, blurry, distorted text, garbled letters, misspelled text, watermark.';
+
+
+// 프롬프트 조립 함수: 책 정보와 옵션을 받아서 최종 프롬프트 문자열로 조립하여 반환
+export function buildStructuredPrompt(book, options) {
+  const stylePrompt = STYLE_PRESETS[options.style] || STYLE_PRESETS['수채화']; // 기본값 수채화
+  const backgroundPrompt = BACKGROUND_PRESETS[options.background] || BACKGROUND_PRESETS['베이지']; // 기본값 베이지
+  const lightingPrompt = LIGHTING_PRESETS[options.lighting] || LIGHTING_PRESETS['자연광']; // 기본값 자연광
+  const typographyPrompt = TYPOGRAPHY_PRESETS[options.typography] || TYPOGRAPHY_PRESETS['클래식 명조']; // 기본값 클래식 명조
+
+  // 대문자 구획 태그 형식으로 조립
+  return `
+[STYLE]
+${stylePrompt}
+[SUBJECT]
+A professional book cover design. Main theme concept: ${book.content}. Title: "${book.title}". Author: "${book.author}".
+[BACKGROUND]
+${backgroundPrompt}
+[LIGHTING]
+${lightingPrompt}
+[TYPOGRAPHY]
+${typographyPrompt}
+[TECHNICAL]
+${TECHNICAL_DEFAULT}
+[NEGATIVE]
+${NEGATIVE_DEFAULT}
+`.trim();
+}
+
+
+// 이미지 생성 함수: API Key와 조립된 프롬프트를 받아서 OpenAI 이미지 생성 API를 호출하여 결과를 반환
+export async function generateBookCover(apiKey, prompt) {
+  if (!apiKey) throw new Error('API Key가 없습니다.');
+
+  // 미니프로젝트 공식 가이드 엔드포인트 URL
+  const response = await fetch('https://api.openai.com/v1/images/generations', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${apiKey.trim()}` // !주의: Bearer 뒤 한 칸 공백 필수
+    },
+    body: JSON.stringify({
+      model: 'gpt-image-2',
+      prompt: prompt,            // 위에서 조립한 프롬프트 주입
+      size: '1024x1536',
+      output_format: 'png',
+      n: 1                       // 이미지 생성 개수
+    })
+  });
+
+  if (!response.ok) { // API 요청 실패 시 에러 처리
+    throw new Error(`OpenAI 요청 실패 (Status: ${response.status})`);
+  }
+
+  const data = await response.json();
+  const b64Json = data.data?.[0]?.b64_json; // 응답 데이터에서 base64 추출
+
+  // 이미지 데이터가 없을 경우 에러 처리
+  if (!b64Json) throw new Error('이미지 데이터를 찾지 못했습니다.');
+
+  // React 상태와 json-server PATCH로 바로 넘겨줄 수 있는 Data URL 포맷으로 변환햐서 반환
+  return `data:image/png;base64,${b64Json}`;
+}

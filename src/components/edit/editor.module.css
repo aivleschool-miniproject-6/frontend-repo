@@ -1,0 +1,232 @@
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 30px 20px;
+  font-family: 'Pretendard', sans-serif;
+}
+
+.header {
+  text-align: center;
+  margin-bottom: 40px;
+}
+
+.title {
+  font-size: 2rem;
+  font-weight: 800;
+  color: #2b2b2b;
+  letter-spacing: -0.5px;
+}
+
+.glassContainer {
+  margin-bottom: 40px;
+  padding: 50px 40px;
+  border-radius: 24px;
+  background: linear-gradient(135deg, #d4fc79 0%, #96e6a1 100%);
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  box-shadow: 0 15px 35px rgba(0, 0, 0, 0.05);
+}
+
+.previewSection {
+  display: flex;
+  justify-content: center;
+  gap: 30px;
+  width: 100%;
+}
+
+.imageSlot {
+  flex: 1;
+  max-width: 300px;
+  aspect-ratio: 2 / 3;
+  
+  background: rgba(255, 255, 255, 0.3);
+  backdrop-filter: blur(15px);
+  -webkit-backdrop-filter: blur(15px);
+  border: 1px solid rgba(255, 255, 255, 0.6);
+  box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.1);
+  
+  border-radius: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+  outline: 4px solid transparent;
+}
+
+.imageSlot:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 15px 40px rgba(31, 38, 135, 0.15);
+  background: rgba(255, 255, 255, 0.4);
+}
+
+.activeSlot {
+  outline: 4px solid #fff;
+  transform: scale(1.05) translateY(-5px);
+  box-shadow: 0 0 25px rgba(255, 255, 255, 0.8), 0 10px 40px rgba(31, 38, 135, 0.2);
+  background: rgba(255, 255, 255, 0.6);
+}
+
+.slotText {
+  font-size: 1.2rem;
+  color: rgba(0, 0, 0, 0.4);
+  font-weight: 700;
+  letter-spacing: 1px;
+}
+
+.loadingSpinner {
+  font-size: 1.1rem;
+  font-weight: bold;
+  color: #333;
+  animation: pulse 1.5s infinite;
+}
+
+@keyframes pulse {
+  0% { opacity: 0.6; }
+  50% { opacity: 1; }
+  100% { opacity: 0.6; }
+}
+
+.generatedImg {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.applyWrapper {
+  margin-top: 40px;
+  animation: slideUp 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+}
+
+.applyBtn {
+  background: #ffffff;
+  color: #1a1a1a;
+  border: none;
+  padding: 18px 50px;
+  font-size: 1.2rem;
+  font-weight: 800;
+  border-radius: 50px;
+  cursor: pointer;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+  transition: all 0.3s ease;
+}
+
+.applyBtn:hover {
+  transform: translateY(-3px) scale(1.02);
+  box-shadow: 0 15px 35px rgba(0, 0, 0, 0.15);
+}
+
+@keyframes slideUp {
+  0% { opacity: 0; transform: translateY(20px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+
+.controlPanel {
+  background-color: #fcfcfc; 
+  padding: 40px;
+  border-radius: 20px;
+  border: 1px solid #eee;
+  box-shadow: 0 5px 20px rgba(0,0,0,0.02);
+}
+
+.optionsRow, .promptRow {
+  display: flex;
+  margin-bottom: 25px;
+  align-items: flex-start;
+}
+
+.label {
+  width: 130px;
+  font-size: 1.1rem;
+  font-weight: bold;
+  color: #444;
+  margin: 0;
+  padding-top: 8px;
+}
+
+.tagGroup {
+  flex: 1;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
+}
+
+.divider {
+  color: #ccc;
+  margin: 0 5px;
+}
+
+.tag {
+  padding: 8px 18px;
+  border: 1px solid #e0e0e0;
+  background: white;
+  border-radius: 20px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  color: #666;
+  font-weight: 500;
+  transition: all 0.2s;
+}
+
+.tag:hover {
+  border-color: #96e6a1;
+  color: #2b2b2b;
+}
+
+.activeTag {
+  background: #f1fbe8;
+  border-color: #96e6a1;
+  color: #2d6a4f;
+  font-weight: bold;
+}
+
+.promptInput {
+  flex: 1;
+  height: 120px;
+  padding: 18px;
+  border: 1px solid #e0e0e0;
+  border-radius: 12px;
+  resize: none;
+  font-family: inherit;
+  font-size: 1rem;
+  color: #333;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.promptInput:focus {
+  outline: none;
+  border-color: #96e6a1;
+  box-shadow: 0 0 0 3px rgba(150, 230, 161, 0.2);
+}
+
+.actionRow {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 30px;
+}
+
+.generateBtn {
+  background: #1a1a1a;
+  color: white;
+  border: none;
+  padding: 16px 40px;
+  font-size: 1.1rem;
+  font-weight: bold;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: background 0.2s, transform 0.1s;
+}
+
+.generateBtn:hover:not(:disabled) {
+  background: #333;
+  transform: translateY(-2px);
+}
+
+.generateBtn:disabled {
+  background: #aaa;
+  cursor: not-allowed;
+}

@@ -91,9 +91,22 @@ const styles = {
     fontSize: 12,
     color: '#6b6b67',
   },
+  deleteBtn: {
+    width: 30,
+    height: 30,
+    borderRadius: 8,
+    border: '0.5px solid rgba(0,0,0,0.22)',
+    background: '#fff',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    cursor: 'pointer',
+    color: '#c0392b',
+    fontSize: 15,
+  },
 }
 
-export default function BookListItem({ book, rank, onClick }) {
+export default function BookListItem({ book, rank, onClick, onDelete }) {
   const { bg, ic } = getCoverColor(book.genre)
 
   return (
@@ -121,6 +134,13 @@ export default function BookListItem({ book, rank, onClick }) {
       <div style={styles.right}>
         <div style={styles.price}>{book.price?.toLocaleString()}원</div>
         <div style={styles.date}>{book.pubDate}</div>
+        <button
+          style={styles.deleteBtn}
+          onClick={e => { e.stopPropagation(); onDelete && onDelete() }}
+          title="삭제"
+        >
+          <i className="ti ti-trash" />
+        </button>
       </div>
     </div>
   )

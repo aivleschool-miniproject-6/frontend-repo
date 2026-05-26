@@ -4,6 +4,7 @@ import Header from './components/common/Header/Header';
 import Home from './components/pages/Home';
 import BookListPage from './components/list/pages/BookListPage';
 import BookFormPage from './components/list/pages/BookFormPage';
+import BookCoverEditor from './components/edit/BookCoverEditor';
 
 function BookListRoute() {
   const navigate = useNavigate();
@@ -31,6 +32,7 @@ function App() {
           <Route path="/" element={<Home />} />
           <Route path="/books" element={<BookListRoute />} />
           <Route path="/books/new" element={<BookFormRoute />} />
+          <Route path="/cover-editor" element={<BookCoverEditor />} />
         </Routes>
       </Box>
     </BrowserRouter>

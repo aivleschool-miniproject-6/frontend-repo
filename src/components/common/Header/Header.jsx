@@ -5,6 +5,7 @@ const navItems = [
   { label: '홈', path: '/' },
   { label: '목록', path: '/books' },
   { label: '등록', path: '/books/new' },
+  { label: '표지편집', path: '/cover-editor' },
 ]
 
 function Header() {
@@ -20,7 +21,6 @@ function Header() {
         <Box sx={{ display: 'flex', alignItems: 'center' }}>
           {navItems.map((item, index) => (
             <Box key={item.path} sx={{ display: 'flex', alignItems: 'center' }}>
-              {/* 구분선 */}
               {index !== 0 && (
                 <Divider orientation="vertical" flexItem sx={{ mx: 1, borderColor: '#999' }} />
               )}
@@ -29,7 +29,7 @@ function Header() {
                 to={item.path}
                 sx={{
                   color: location.pathname === item.path ? '#333' : '#666',
-                  fontWeight: location.pathname === item.path ? 'bold' : 'normal'
+                  fontWeight: location.pathname === item.path ? 'bold' : 'normal',
                 }}
               >
                 {item.label}

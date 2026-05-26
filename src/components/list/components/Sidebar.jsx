@@ -1,4 +1,4 @@
-const GENRES = ['전체', '소설', '인문', '에세이', '경제/경영', 'IT/컴퓨터', '자기계발']
+﻿const GENRES = ['전체', '소설', '인문', '에세이', '경제/경영', 'IT/컴퓨터', '자기계발']
 
 const GENRE_ICONS = {
   '전체': 'ti-layout-grid',
@@ -74,12 +74,9 @@ const styles = {
     background: 'rgba(0,0,0,0.12)',
     margin: '6px 8px',
   },
-  bottom: {
-    padding: '8px 8px 14px',
-  },
 }
 
-export default function Sidebar({ genre, books, onSelectGenre, onClickNew }) {
+export default function Sidebar({ genre, books, onSelectGenre }) {
   const countByGenre = (g) =>
     g === '전체' ? books.length : books.filter((b) => b.genre === g).length
 
@@ -104,17 +101,6 @@ export default function Sidebar({ genre, books, onSelectGenre, onClickNew }) {
           </button>
         ))}
         <div style={styles.divider} />
-      </div>
-
-      <div style={styles.bottom}>
-        <button style={styles.item(false)} onClick={onClickNew}>
-          <i className="ti ti-plus" style={{ fontSize: 15 }} />
-          도서 등록
-        </button>
-        <button style={styles.item(false)}>
-          <i className="ti ti-settings" style={{ fontSize: 15 }} />
-          설정
-        </button>
       </div>
     </aside>
   )

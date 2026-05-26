@@ -57,6 +57,24 @@ const styles = {
     alignItems: 'center',
     justifyContent: 'center',
   },
+  deleteBtn: {
+    position: 'absolute',
+    top: 10,
+    right: 10,
+    width: 28,
+    height: 28,
+    borderRadius: '50%',
+    background: '#fff',
+    border: '0.5px solid rgba(0,0,0,0.22)',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    cursor: 'pointer',
+    color: '#c0392b',
+    fontSize: 14,
+    opacity: 0,
+    transition: 'opacity 0.15s',
+  },
   body: {
     padding: 12,
   },
@@ -102,7 +120,7 @@ const styles = {
   },
 }
 
-export default function BookCard({ book, rank, onClick }) {
+export default function BookCard({ book, rank, onClick, onDelete }) {
   const { bg, ic } = getCoverColor(book.genre)
 
   return (
@@ -112,14 +130,24 @@ export default function BookCard({ book, rank, onClick }) {
       onMouseEnter={e => {
         e.currentTarget.style.transform = 'translateY(-4px)'
         e.currentTarget.style.boxShadow = '0 8px 24px rgba(0,0,0,0.13)'
+        e.currentTarget.querySelector('.del-btn').style.opacity = '1'
       }}
       onMouseLeave={e => {
         e.currentTarget.style.transform = 'translateY(0)'
         e.currentTarget.style.boxShadow = 'none'
+        e.currentTarget.querySelector('.del-btn').style.opacity = '0'
       }}
     >
       <div style={styles.cover(bg)}>
         {rank && <span style={styles.rank}>{rank}</span>}
+        <button
+          className="del-btn"
+          style={styles.deleteBtn}
+          onClick={e => { e.stopPropagation(); onDelete && onDelete() }}
+          title="삭제"
+        >
+          <i className="ti ti-trash" />
+        </button>
         {book.coverImageUrl ? (
           <img src={book.coverImageUrl} alt={book.title} style={styles.coverImg} />
         ) : (
