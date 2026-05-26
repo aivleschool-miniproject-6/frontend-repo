@@ -126,7 +126,7 @@ const BookSection = ({ onBookClick }) => {
                   <h4>{book.title}</h4>
                   <p>{book.author}</p>
 
-                  // 조회수 UI 제거 
+                  {/* 조회수 UI 제거 */}
                   {/* <div style={{ fontSize: '11px', color: '#6b6b67', marginTop: '4px' }}>
                     조회수: {Number(book.viewCount || 0).toLocaleString()}회
                   </div> */}
