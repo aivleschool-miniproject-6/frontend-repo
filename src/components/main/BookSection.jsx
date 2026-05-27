@@ -13,7 +13,7 @@ const BookSection = ({ onBookClick }) => {
   useEffect(() => {
     const fetchBooks = async () => {
       try {
-        const response = await fetch('http://localhost:5000/books');
+        const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/books`);
         const data = await response.json();
 
         // 1. 도서 랭킹: 조회수(viewCount)가 많은 순으로 내림차순 정렬

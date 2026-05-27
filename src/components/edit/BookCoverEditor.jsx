@@ -43,7 +43,7 @@ const BookCoverEditor = () => {
     const fetchBookData = async () => {
       try {
         const targetId = id || 101;
-        const response = await fetch(`http://localhost:5000/books/${targetId}`);
+        const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/books/${targetId}`);
         
         if (!response.ok) throw new Error('책 데이터를 불러오지 못했습니다.');
         
@@ -132,7 +132,7 @@ const BookCoverEditor = () => {
     try {
       const targetId = id || 101;
       const coverImageUrl = await compressImageDataUrl(generatedImages[selectedImageIndex]);
-      const response = await fetch(`http://localhost:5000/books/${targetId}`, {
+      const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/books/${targetId}`, {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',

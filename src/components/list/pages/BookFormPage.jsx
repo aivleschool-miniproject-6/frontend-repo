@@ -9,7 +9,7 @@ import {
   generateBookCover,
 } from '../../../util/bookCoverService'
 
-const API = 'http://localhost:5000/books'
+const API = `${import.meta.env.VITE_API_BASE_URL}/books`
 
 const GENRES = ['소설', '인문', '에세이', '경제/경영', 'IT/컴퓨터', '자기계발']
 

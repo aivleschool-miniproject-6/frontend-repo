@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { fmtDate, getCoverColor } from '../list/components/BookCard'
 
-const API = 'http://localhost:5000/books'
+const API = `${import.meta.env.VITE_API_BASE_URL}/books`
 
 function formatDateTime(value) {
   if (!value) return '-'

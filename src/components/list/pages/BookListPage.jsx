@@ -5,7 +5,7 @@ import BookCard from '../components/BookCard'
 import BookListItem from '../components/BookListItem'
 import styles from './BookListPage.module.css'
 
-const API = 'http://localhost:5000/books'
+const API = `${import.meta.env.VITE_API_BASE_URL}/books`
 const ALL = 'ALL'
 const FAVORITES = 'FAVORITES'
 
