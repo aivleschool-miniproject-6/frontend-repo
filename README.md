@@ -131,7 +131,7 @@ $ npm run dev
 
 |메인 화면   |도서 목록   |
 |--------|--------|
-|<img src="https://github.com/user-attachments/assets/1a76f89e-b3c5-41f8-ae42-61477d71240d">        |<img src="https://github.com/user-attachments/assets/7fd92d5e-ecff-4f26-9e3a-12e6929f513c">        |
+|<img src="https://github.com/user-attachments/assets/1a76f89e-b3c5-41f8-ae42-61477d71240d">        | <img width="1895" height="908" alt="image" src="https://github.com/user-attachments/assets/b334a398-0247-411b-9d68-c69d7ff44bc5" /> |
 |도서 검색 기능과 도서 랭킹 제공        |사이드바에서 장르별 모아보기 기능        |
 |신규 도서 등록|도서 표지 생성|
 |<img src="https://github.com/user-attachments/assets/7ed3444e-996e-4ec5-8382-4563cf8dcd52">        |<img src="https://github.com/user-attachments/assets/0ee21aeb-7347-4635-9ddb-c01a070ca8ca" />        |
