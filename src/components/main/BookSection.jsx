@@ -119,13 +119,6 @@ const BookSection = ({ onBookClick }) => {
                 }}
               >
                 <div className={styles.imageWrapper}>
-                  {/*}
-                   추후 직접 생성한 표지로 변경
-                  - 나중에 DB의 'coverImageUrl'에 실제 이미지 주소가 정상적으로 채워지면,
-                    fallback 로직(|| 뒤에 있는 랜덤 이미지)을 지우고  사용
-                    
-                  <img src={book.coverImageUrl} alt={book.title} /> 
-                  */}
                   <img
                     src={book.coverImageUrl || `https://picsum.photos/seed/${book.id}/200/300`}
                     alt={book.title}
@@ -134,13 +127,6 @@ const BookSection = ({ onBookClick }) => {
                 <div className={styles.cardInfo}>
                   <h4>{book.title}</h4>
                   <p>{book.author}</p>
-
-                  {/* 조회수 UI 제거 */}
-                  {/* <div style={{ fontSize: '11px', color: '#6b6b67', marginTop: '4px' }}>
-                    조회수: {Number(book.viewCount || 0).toLocaleString()}회
-                  </div> */}
-
-
                 </div>
               </div>
             ))}
