@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { useNavigate, useParams } from 'react-router-dom'
+import { useNavigate, useParams } from 'react-router-dom' // react-dom -> react-router-dom으로 수정
 import styles from './editor.module.css'
 import {
   STYLE_PRESETS,
@@ -28,6 +28,11 @@ const BookCoverEditor = () => {
     background: 'beige',
     lighting: 'daylight',
     typography: 'serif',
+  })
+
+  const [apiConfig, setApiConfig] = useState({
+    model: 'gpt-image-2',
+    quality: 'Medium', // Low, Medium, High UI용 상태
   })
 
   const [generatedImages, setGeneratedImages] = useState([null, null, null])
@@ -64,6 +69,13 @@ const BookCoverEditor = () => {
     }))
   }
 
+  const handleModelChange = (modelName) => {
+    setApiConfig((prev) => ({
+      model: modelName,
+      quality: modelName === 'dall-e-3' ? 'High' : prev.quality
+    }));
+  };
+
   const handleGenerate = async () => {
     if (!userPrompt.trim()) {
       alert('어떤 스타일의 표지를 원하시는지 프롬프트를 작성해주세요!')
@@ -90,10 +102,13 @@ const BookCoverEditor = () => {
 
       const finalPrompt = buildStructuredPrompt(combinedInfo, selectedOptions)
       
+      // 사이즈 무조건 고정
+      const fixedSize = '1024x1536';
+
       const generatePromises = [
-        generateBookCover(apiKey, finalPrompt),
-        generateBookCover(apiKey, finalPrompt),
-        generateBookCover(apiKey, finalPrompt)
+        generateBookCover(apiKey, finalPrompt, apiConfig.model, fixedSize),
+        generateBookCover(apiKey, finalPrompt, apiConfig.model, fixedSize),
+        generateBookCover(apiKey, finalPrompt, apiConfig.model, fixedSize)
       ];
 
       const newImages = await Promise.all(generatePromises);
@@ -141,8 +156,6 @@ const BookCoverEditor = () => {
 
   return (
     <div className={styles.container}>
-    
-
       <div className={styles.glassContainer}>
         <div className={styles.previewSection}>
           {[0, 1, 2].map((index) => (
@@ -177,6 +190,44 @@ const BookCoverEditor = () => {
       </div>
 
       <div className={styles.controlPanel}>
+        <div className={styles.optionsRow}>
+          <h3 className={styles.label}>AI 모델</h3>
+          <div className={styles.tagGroup}>
+            {/* 요청하신 모델 3가지만 출력되도록 수정 */}
+            {['gpt-image-2', 'gpt-image-1', 'dall-e-3'].map((model) => (
+              <button
+                key={model}
+                className={`${styles.tag} ${apiConfig.model === model ? styles.activeTag : ''}`}
+                onClick={() => handleModelChange(model)}
+              >
+                {model === 'gpt-image-2' ? 'GPT Image 2' : 
+                 model === 'gpt-image-1' ? 'GPT Image 1' : 'DALL-E 3'}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <div className={styles.optionsRow}>
+          <h3 className={styles.label}>이미지 퀄리티</h3>
+          <div className={styles.tagGroup}>
+            {['Low', 'Medium', 'High'].map((qualityLevel) => (
+              <button
+                key={qualityLevel}
+                className={`${styles.tag} ${apiConfig.quality === qualityLevel ? styles.activeTag : ''}`}
+                onClick={() => {
+                  if (apiConfig.model === 'dall-e-3' && qualityLevel !== 'High') {
+                    alert('DALL-E 3 모델은 고품질 모델이므로 High 퀄리티만 선택 가능합니다.');
+                    return;
+                  }
+                  setApiConfig({ ...apiConfig, quality: qualityLevel });
+                }}
+              >
+                {qualityLevel}
+              </button>
+            ))}
+          </div>
+        </div>
+
         <div className={styles.optionsRow}>
           <h3 className={styles.label}>스타일</h3>
           <div className={styles.tagGroup}>

@@ -36,6 +36,11 @@ export default function BookListPage({ onClickNew, onClickBook }) {
   const [favoriteIds, setFavoriteIds] = useState(() => readFavoriteIds())
   const [sortBy, setSortBy] = useState('register')
 
+  // ✅ 추가: SearchBar에서 URL 변경 시 query 동기화
+  useEffect(() => {
+    setQuery(searchParams.get('search') || '')
+  }, [searchParams])
+
   useEffect(() => {
     const load = async () => {
       try {

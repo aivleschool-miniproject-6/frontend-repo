@@ -89,11 +89,26 @@ export default function BookFormPage({ mode, id, onBack, onSaved }) {
   const [changed, setChanged] = useState(false)
   const [loading, setLoading] = useState(isEdit)
 
-  const [aiOptions, setAiOptions] = useState({ style: '수채화', background: '베이지', lighting: '자연광', typography3: '클래식 명조' })
+  const [aiOptions, setAiOptions] = useState({ style: '수채화', background: '베이지', lighting: '자연광', typography: '클래식 명조' })
+  
+  // 1. 모델과 퀄리티 상태 추가
+  const [apiConfig, setApiConfig] = useState({
+    model: 'gpt-image-2',
+    quality: 'Medium',
+  })
+
   const [aiPrompt, setAiPrompt] = useState('')
   const [generatedImages, setGeneratedImages] = useState([null, null, null])
   const [isGenerating, setIsGenerating] = useState(false)
   const [selectedImageIndex, setSelectedImageIndex] = useState(null)
+
+  // 2. 모델 변경 시 예외처리 핸들러 추가
+  const handleModelChange = (modelName) => {
+    setApiConfig((prev) => ({
+      model: modelName,
+      quality: modelName === 'dall-e-3' ? 'High' : prev.quality
+    }));
+  };
 
   // 수정 모드: 기존 데이터 로딩
   useEffect(() => {
@@ -155,10 +170,15 @@ export default function BookFormPage({ mode, id, onBack, onSaved }) {
         content: `[Book Story]: ${form.content} / [User Design Request]: ${aiPrompt}`,
       }
       const finalPrompt = buildStructuredPrompt(combinedInfo, aiOptions)
+      
+      // 3. 사이즈는 1024x1536으로 무조건 고정
+      const fixedSize = '1024x1536';
+      
+      // 4. 동적 모델 전달
       const newImages = await Promise.all([
-        generateBookCover(apiKey, finalPrompt),
-        generateBookCover(apiKey, finalPrompt),
-        generateBookCover(apiKey, finalPrompt),
+        generateBookCover(apiKey, finalPrompt, apiConfig.model, fixedSize),
+        generateBookCover(apiKey, finalPrompt, apiConfig.model, fixedSize),
+        generateBookCover(apiKey, finalPrompt, apiConfig.model, fixedSize),
       ])
       setGeneratedImages(newImages)
     } catch (error) {
@@ -306,6 +326,39 @@ export default function BookFormPage({ mode, id, onBack, onSaved }) {
               <div style={s.sectionTitle}>
                 <i className="ti ti-wand" /> AI 표지 생성
                 <span style={{ fontSize: 11, fontWeight: 400, marginLeft: 4 }}>(선택)</span>
+              </div>
+
+              {/* 5. AI 모델 선택 버튼 렌더링 */}
+              <div style={s.formGroup}>
+                <label style={s.label}>AI 모델</label>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+                  {['gpt-image-2', 'gpt-image-1', 'dall-e-3'].map((model) => (
+                    <button key={model} onClick={() => handleModelChange(model)}
+                      style={{ padding: '4px 10px', borderRadius: 20, fontSize: 12, cursor: 'pointer', border: `0.5px solid ${apiConfig.model === model ? '#1a1a18' : 'rgba(0,0,0,0.22)'}`, background: apiConfig.model === model ? '#1a1a18' : '#fff', color: apiConfig.model === model ? '#fff' : '#1a1a18' }}>
+                      {model === 'gpt-image-2' ? 'GPT Image 2' : 
+                       model === 'gpt-image-1' ? 'GPT Image 1' : 'DALL-E 3'}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* 6. 이미지 퀄리티 선택 버튼 렌더링 */}
+              <div style={s.formGroup}>
+                <label style={s.label}>이미지 퀄리티</label>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+                  {['Low', 'Medium', 'High'].map((q) => (
+                    <button key={q} onClick={() => {
+                        if (apiConfig.model === 'dall-e-3' && q !== 'High') {
+                          alert('DALL-E 3 모델은 고품질 모델이므로 High 퀄리티만 선택 가능합니다.');
+                          return;
+                        }
+                        setApiConfig((p) => ({ ...p, quality: q }))
+                      }}
+                      style={{ padding: '4px 10px', borderRadius: 20, fontSize: 12, cursor: 'pointer', border: `0.5px solid ${apiConfig.quality === q ? '#1a1a18' : 'rgba(0,0,0,0.22)'}`, background: apiConfig.quality === q ? '#1a1a18' : '#fff', color: apiConfig.quality === q ? '#fff' : '#1a1a18' }}>
+                      {q}
+                    </button>
+                  ))}
+                </div>
               </div>
 
               <div style={s.formGroup}>
