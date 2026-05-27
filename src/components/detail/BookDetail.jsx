@@ -3,6 +3,7 @@ import { fmtDate, getCoverColor } from '../list/components/BookCard'
 
 const API = 'http://localhost:5000/books'
 const viewedBookIds = new Set()
+
 function formatDateTime(value) {
   if (!value) return '-'
   const date = new Date(value)

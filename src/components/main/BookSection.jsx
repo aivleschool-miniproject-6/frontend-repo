@@ -21,10 +21,19 @@ const BookSection = ({ onBookClick }) => {
           .sort((a, b) => (b.viewCount || 0) - (a.viewCount || 0))
           .slice(0, 60);
 
-        // 2. 신작: 출간일(pubDate)이 최근인 순으로 내림차순 정렬
+        // 신작 기준을 '최근 1달 이내 출간(pubDate)'으로 변경 완료!
+        const now = new Date();
+        const oneMonthAgo = new Date();
+        oneMonthAgo.setMonth(now.getMonth() - 1); 
+
         const newBooks = [...data]
+          .filter((book) => {
+            if (!book.pubDate) return false; // 출간일 정보가 없으면 제외
+            const pubDate = new Date(book.pubDate);
+            return pubDate >= oneMonthAgo && pubDate <= now;
+          })
           .sort((a, b) => new Date(b.pubDate) - new Date(a.pubDate))
-          .slice(0, 60);
+          .slice(0, 60); 
 
         setBookData({
           ranking: rankingBooks,
