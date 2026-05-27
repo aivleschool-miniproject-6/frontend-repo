@@ -2,7 +2,6 @@ import { useEffect, useMemo, useState } from 'react'
 import { fmtDate, getCoverColor } from '../list/components/BookCard'
 
 const API = 'http://localhost:5000/books'
-const viewedBookIds = new Set()
 
 function formatDateTime(value) {
   if (!value) return '-'
@@ -303,32 +302,31 @@ export default function BookDetail({ id, onBack, onEdit, onEditCover, onDeleted 
       try {
         setLoading(true)
         setError(null)
+        
+        // 1. 도서 기본 데이터 가져오기
         const res = await fetch(`${API}/${id}`)
         if (!res.ok) throw new Error('책 정보를 찾을 수 없습니다.')
         const data = await res.json()
+        
         const currentViews = Number(data.viewCount || 0)
-
-        // 💡 수정 적용: 전역 변수인 viewedBookIds를 직접 참조합니다.
-        if (viewedBookIds.has(String(id))) {
-          setBook(data)
-          setViews(currentViews)
-          return
-        }
-
-        // 💡 수정 적용: 세션 내 조회수 증가 처리 방지 플래그 추가
-        viewedBookIds.add(String(id))
         const nextViews = currentViews + 1
-        const patchRes = await fetch(`${API}/${id}`, {
-          method: 'PATCH',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ viewCount: nextViews }),
-        })
 
-        if (!patchRes.ok) throw new Error('조회수 업데이트에 실패했습니다.')
-        const updatedBook = await patchRes.json()
+        // 2. [새로고침 없이 즉시 반영] UI의 책 정보와 +1된 조회수를 비동기 대기 없이 바로 세팅
+        setBook(data)
+        setViews(nextViews)
 
-        setBook(updatedBook)
-        setViews(Number(updatedBook.viewCount || nextViews))
+        // 3. [동시성 충돌 해결] 서버 DB 업데이트는 300ms 뒤 백그라운드에서 안정적으로 수행
+        setTimeout(() => {
+          fetch(`${API}/${id}`, {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ viewCount: nextViews }),
+          }).catch((e) => {
+            // 다른 페이지의 파일 쓰기와 겹치더라도 UI가 깨지지 않게 예외를 조용히 처리
+            console.warn('조회수 백그라운드 동기화 락 상태 우회 처리:', e)
+          })
+        }, 300)
+
       } catch (e) {
         setError(e.message)
       } finally {

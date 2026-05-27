@@ -143,7 +143,7 @@ const BookCoverEditor = () => {
       });
 
       if (response.ok) {
-        alert('✨ 표지가 성공적으로 수정되었습니다!');
+        alert('표지가 성공적으로 수정되었습니다!');
         navigate(-1);
       } else {
         throw new Error('저장 실패');
