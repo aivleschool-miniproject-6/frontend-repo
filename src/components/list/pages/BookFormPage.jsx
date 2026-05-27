@@ -53,11 +53,11 @@ const s = {
     borderRadius: 8, fontSize: 13, background: '#fff', color: '#1a1a18',
     minHeight: 110, resize: 'vertical', lineHeight: 1.6, outline: 'none',
   }),
-  select: {
+  select: (err) => ({
     width: '100%', padding: '8px 12px',
-    border: '0.5px solid rgba(0,0,0,0.22)',
+    border: `0.5px solid ${err ? '#e74c3c' : 'rgba(0,0,0,0.22)'}`,
     borderRadius: 8, fontSize: 13, background: '#fff', color: '#1a1a18', outline: 'none',
-  },
+  }),
   errMsg: { fontSize: 11, color: '#e74c3c', marginTop: 4, display: 'flex', alignItems: 'center', gap: 3 },
   charCount: { fontSize: 11, color: '#6b6b67', textAlign: 'right', marginTop: 3 },
   row: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14, marginBottom: 14 },
@@ -81,6 +81,7 @@ const s = {
 export default function BookFormPage({ mode, id, onBack, onSaved }) {
   const isEdit = mode === 'edit'
 
+  // 하나의 숫자로 묶어 다루기 
   const [form, setForm] = useState({
     title: '', author: '', content: '', genre: '',
     publisher: '', pubDate: '', price: '', pages: '', isbn: '',
@@ -89,7 +90,9 @@ export default function BookFormPage({ mode, id, onBack, onSaved }) {
   const [changed, setChanged] = useState(false)
   const [loading, setLoading] = useState(isEdit)
 
-  const [aiOptions, setAiOptions] = useState({ style: '수채화', background: '베이지', lighting: '자연광', typography: '클래식 명조' })
+  const [aiOptions, setAiOptions] = useState({ 
+    style: '수채화', background: '베이지', lighting: '자연광', typography: '클래식 명조' 
+  })
   
   // 1. 모델과 퀄리티 상태 추가
   const [apiConfig, setApiConfig] = useState({
@@ -114,7 +117,7 @@ export default function BookFormPage({ mode, id, onBack, onSaved }) {
   useEffect(() => {
     if (!isEdit) return
     const load = async () => {
-      try {
+      try { /////fetch
         const res = await fetch(`${API}/${id}`)
         const data = await res.json()
         setForm({
@@ -127,7 +130,9 @@ export default function BookFormPage({ mode, id, onBack, onSaved }) {
           price: data.price || '',
           pages: data.pages || '',
           isbn: data.isbn || '',
-        })
+        })      
+      } catch(err) {
+        console.error('데이터를 불러오는 데 실패했습니다.', err)
       } finally {
         setLoading(false)
       }
@@ -136,8 +141,11 @@ export default function BookFormPage({ mode, id, onBack, onSaved }) {
   }, [id, isEdit])
 
   const set = (key, val) => {
+    // 1. 기존의 객체 속성들을 불변성을 유지하며 복사
     setForm((prev) => ({ ...prev, [key]: val }))
-    setChanged(true)
+    // 2. 변경을 원하는 키값만 덮어쓰기
+    setChanged(true) 
+    // 값이 입력되면 해당 필드의 에러 메시지는 실시간으로 삭제
     if (errors[key]) setErrors((prev) => ({ ...prev, [key]: '' }))
   }
 
@@ -145,7 +153,28 @@ export default function BookFormPage({ mode, id, onBack, onSaved }) {
     const e = {}
     if (!form.title.trim()) e.title = '제목은 필수 입력 항목입니다.'
     if (!form.author.trim()) e.author = '저자는 필수 입력 항목입니다.'
-    if (!form.content.trim()) e.content = '도서 내용은 필수 입력 항목입니다.'
+    if (!form.genre) e.genre = '장르는 필수 입력 항목입니다.'
+    
+    if (!form.content.trim()) {
+      e.content = '도서 내용은 필수 입력 항목입니다.'
+    } else if (form.content.length > 500) {
+      // 도서 내용 최대 500자 제한 
+      e.content = '도서 내용은 500자까지 작성 가능합니다.'
+    }
+
+    // 선택 항목 유효성 검사
+    if (form.price && Number(form.price) < 0) {
+      e.price = '가격은 0원 이상이어야 합니다.'
+    }
+    if (form.pages && Number(form.pages) <= 0) {
+      e.pages = '페이지 수는 1페이지 이상이어야 합니다.'
+    }
+    if (form.isbn && form.isbn.trim()) {
+      const cleanIsbn = form.isbn.replace(/[^0-9]/g, '') // 숫자만 추출
+      if (cleanIsbn.length !== 13) {
+        e.isbn = 'ISBN은 정확히 13자리 숫자여야 합니다.'
+      }
+    }
     setErrors(e)
     return Object.keys(e).length === 0
   }
@@ -192,36 +221,44 @@ export default function BookFormPage({ mode, id, onBack, onSaved }) {
 
   const handleSave = async () => {
     if (!validate()) return
-    const now = new Date().toISOString()
-    const coverImageUrl = (!isEdit && selectedImageIndex !== null)
-      ? await compressImageDataUrl(generatedImages[selectedImageIndex])
-      : ''
-    const body = {
-      ...form,
-      price: form.price ? Number(form.price) : null,
-      pages: form.pages ? Number(form.pages) : null,
-      updatedAt: now,
-      ...(isEdit ? {} : { createdAt: now, coverImageUrl }),
+    
+    try {
+      const now = new Date().toISOString()
+      const coverImageUrl = (!isEdit && selectedImageIndex !== null)
+        ? await compressImageDataUrl(generatedImages[selectedImageIndex])
+        : ''
+        
+      const body = {
+        ...form,
+        price: form.price ? Number(form.price) : null,
+        pages: form.pages ? Number(form.pages) : null,
+        updatedAt: now,
+        ...(isEdit ? {} : { createdAt: now, coverImageUrl }),
+      }
+
+      /////fetch
+      const res = isEdit
+        ? await fetch(`${API}/${id}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(body),
+        })
+        : await fetch(API, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(body),
+        })
+
+      if (!res.ok) {
+        alert('저장에 실패했습니다. json-server가 실행 중인지 확인하세요.')
+        return
+      }
+
+      onSaved()
+    } catch (error) {
+      console.error(error)
+      alert('네트워크 전송 중 오류가 발생했습니다.')
     }
-
-    const res = isEdit
-      ? await fetch(`${API}/${id}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(body),
-      })
-      : await fetch(API, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(body),
-      })
-
-    if (!res.ok) {
-      alert('저장에 실패했습니다. json-server가 실행 중인지 확인하세요.')
-      return
-    }
-
-    onSaved()
   }
 
   if (loading) return <div style={{ padding: 40, color: '#6b6b67' }}>불러오는 중...</div>
@@ -264,11 +301,12 @@ export default function BookFormPage({ mode, id, onBack, onSaved }) {
                 {errors.author && <div style={s.errMsg}><i className="ti ti-alert-circle" style={{ fontSize: 13 }} />{errors.author}</div>}
               </div>
               <div>
-                <label style={s.label}>장르</label>
-                <select style={s.select} value={form.genre} onChange={(e) => set('genre', e.target.value)}>
+                <label style={s.label}>장르 <span style={s.req}>*</span></label>
+                <select style={s.select(errors.genre)} value={form.genre} onChange={(e) => set('genre', e.target.value)}>
                   <option value="">장르 선택</option>
                   {GENRES.map((g) => <option key={g}>{g}</option>)}
                 </select>
+                {errors.genre && <div style={s.errMsg}><i className="ti ti-alert-circle" style={{ fontSize: 13 }} />{errors.genre}</div>}
               </div>
             </div>
             <div style={s.formGroup}>
@@ -307,16 +345,19 @@ export default function BookFormPage({ mode, id, onBack, onSaved }) {
             <div style={s.row}>
               <div>
                 <label style={s.label}>가격 (원)</label>
-                <input style={s.input()} type="number" value={form.price} onChange={(e) => set('price', e.target.value)} placeholder="예: 16000" />
+                <input style={s.input(errors.price)} type="number" value={form.price} onChange={(e) => set('price', e.target.value)} placeholder="예: 16000" />
+                {errors.price && <div style={s.errMsg}><i className="ti ti-alert-circle" style={{ fontSize: 13 }} />{errors.price}</div>}
               </div>
               <div>
                 <label style={s.label}>페이지 수</label>
-                <input style={s.input()} type="number" value={form.pages} onChange={(e) => set('pages', e.target.value)} placeholder="예: 280" />
+                <input style={s.input(errors.pages)} type="number" value={form.pages} onChange={(e) => set('pages', e.target.value)} placeholder="예: 280" />
+                {errors.pages && <div style={s.errMsg}><i className="ti ti-alert-circle" style={{ fontSize: 13 }} />{errors.pages}</div>}
               </div>
             </div>
             <div>
               <label style={s.label}>ISBN</label>
-              <input style={s.input()} value={form.isbn} onChange={(e) => set('isbn', e.target.value)} placeholder="13자리 ISBN" maxLength={13} />
+              <input style={s.input(errors.isbn)} value={form.isbn} onChange={(e) => set('isbn', e.target.value)} placeholder="13자리 ISBN" maxLength={13} />
+              {errors.isbn && <div style={s.errMsg}><i className="ti ti-alert-circle" style={{ fontSize: 13 }} />{errors.isbn}</div>}
             </div>
           </div>
 
@@ -328,7 +369,7 @@ export default function BookFormPage({ mode, id, onBack, onSaved }) {
                 <span style={{ fontSize: 11, fontWeight: 400, marginLeft: 4 }}>(선택)</span>
               </div>
 
-              {/* 5. AI 모델 선택 버튼 렌더링 */}
+              {/* AI 모델 선택 버튼 렌더링 */}
               <div style={s.formGroup}>
                 <label style={s.label}>AI 모델</label>
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
@@ -342,7 +383,7 @@ export default function BookFormPage({ mode, id, onBack, onSaved }) {
                 </div>
               </div>
 
-              {/* 6. 이미지 퀄리티 선택 버튼 렌더링 */}
+              {/* 이미지 퀄리티 선택 버튼 렌더링 */}
               <div style={s.formGroup}>
                 <label style={s.label}>이미지 퀄리티</label>
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
