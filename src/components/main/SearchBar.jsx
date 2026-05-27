@@ -30,7 +30,7 @@ const SearchBar = () => {
           onChange={(e) => setQuery(e.target.value)}
           onKeyDown={handleKeyDown}
         />
-        <button className={styles.addBtn} onClick={handleSearch}>+</button>
+
       </div>
     </div>
   );

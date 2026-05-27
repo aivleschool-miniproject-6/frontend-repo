@@ -1,8 +1,8 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { fmtDate, getCoverColor } from '../list/components/BookCard'
 
 const API = 'http://localhost:5000/books'
-
+const viewedBookIds = new Set()
 function formatDateTime(value) {
   if (!value) return '-'
   const date = new Date(value)
@@ -290,7 +290,6 @@ const s = {
 }
 
 export default function BookDetail({ id, onBack, onEdit, onEditCover, onDeleted }) {
-  const viewedBookIds = useRef(new Set())
   const [book, setBook] = useState(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
@@ -308,13 +307,15 @@ export default function BookDetail({ id, onBack, onEdit, onEditCover, onDeleted 
         const data = await res.json()
         const currentViews = Number(data.viewCount || 0)
 
-        if (viewedBookIds.current.has(String(id))) {
+        // 💡 수정 적용: 전역 변수인 viewedBookIds를 직접 참조합니다.
+        if (viewedBookIds.has(String(id))) {
           setBook(data)
           setViews(currentViews)
           return
         }
 
-        viewedBookIds.current.add(String(id))
+        // 💡 수정 적용: 세션 내 조회수 증가 처리 방지 플래그 추가
+        viewedBookIds.add(String(id))
         const nextViews = currentViews + 1
         const patchRes = await fetch(`${API}/${id}`, {
           method: 'PATCH',
