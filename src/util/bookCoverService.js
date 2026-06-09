@@ -63,38 +63,25 @@ ${NEGATIVE_DEFAULT}
 }
 
 
-// 이미지 생성 함수: API Key와 조립된 프롬프트를 받아서 OpenAI 이미지 생성 API를 호출하여 결과를 반환
-export async function generateBookCover(apiKey, prompt) {
-  if (!apiKey) throw new Error('API Key가 없습니다.');
-
-  // 미니프로젝트 공식 가이드 엔드포인트 URL
-  const response = await fetch('https://api.openai.com/v1/images/generations', {
+// API 직접 호출에서 백엔드로 변경
+export async function generateBookCover(bookId, prompt, selectedOptions) {
+  const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/books/cover/generate`, {
     method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${apiKey.trim()}` // !주의: Bearer 뒤 한 칸 공백 필수
-    },
+    headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
-      model: 'gpt-image-2',
-      prompt: prompt,            // 위에서 조립한 프롬프트 주입
-      size: '1024x1536',
-      output_format: 'png',
-      n: 1                       // 이미지 생성 개수
+      bookId: Number(bookId),
+      prompt,
+      selectedOptions
     })
-  });
+  })
 
-  if (!response.ok) { // API 요청 실패 시 에러 처리
-    throw new Error(`OpenAI 요청 실패 (Status: ${response.status})`);
+  if (!response.ok) {
+    throw new Error(`이미지 생성 실패 (Status: ${response.status})`)
   }
 
-  const data = await response.json();
-  const b64Json = data.data?.[0]?.b64_json; // 응답 데이터에서 base64 추출
-
-  // 이미지 데이터가 없을 경우 에러 처리
-  if (!b64Json) throw new Error('이미지 데이터를 찾지 못했습니다.');
-
-  // React 상태와 json-server PATCH로 바로 넘겨줄 수 있는 Data URL 포맷으로 변환햐서 반환
-  return `data:image/png;base64,${b64Json}`;
+  const data = await response.json()
+  // 응답: { images: [base64_1, base64_2, base64_3] }
+  return data.images || []
 }
 
 export async function compressImageDataUrl(dataUrl, maxBytes = 75000) {

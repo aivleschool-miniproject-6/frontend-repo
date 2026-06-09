@@ -184,35 +184,31 @@ export default function BookFormPage({ mode, id, onBack, onSaved }) {
       alert('어떤 스타일의 표지를 원하시는지 프롬프트를 작성해주세요!')
       return
     }
-    const apiKey = import.meta.env.VITE_OPENAI_API_KEY
-    if (!apiKey) {
-      alert('.env 파일에 VITE_OPENAI_API_KEY를 설정해주세요.')
-      return
-    }
     try {
       setIsGenerating(true)
       setSelectedImageIndex(null)
       setGeneratedImages([null, null, null])
+
       const combinedInfo = {
         title: form.title,
         author: form.author,
         content: `[Book Story]: ${form.content} / [User Design Request]: ${aiPrompt}`,
       }
+
       const finalPrompt = buildStructuredPrompt(combinedInfo, aiOptions)
       
-      // 3. 사이즈는 1024x1536으로 무조건 고정
-      const fixedSize = '1024x1536';
+      const selectedOptions = {
+      ...aiOptions,
+      model: apiConfig.model,
+      quality: apiConfig.quality
+    }
+
+      const images = await generateBookCover(id || 0, finalPrompt, selectedOptions)
+      setGeneratedImages(images)
       
-      // 4. 동적 모델 전달
-      const newImages = await Promise.all([
-        generateBookCover(apiKey, finalPrompt, apiConfig.model, fixedSize),
-        generateBookCover(apiKey, finalPrompt, apiConfig.model, fixedSize),
-        generateBookCover(apiKey, finalPrompt, apiConfig.model, fixedSize),
-      ])
-      setGeneratedImages(newImages)
     } catch (error) {
-      console.error(error)
-      alert(`이미지 생성 중 오류가 발생했습니다: ${error.message}`)
+      console.error('이미지 생성 실패:', error)
+      alert('이미지 생성 중 오류가 발생했습니다. 다시 시도해주세요.')
       setGeneratedImages([null, null, null])
     } finally {
       setIsGenerating(false)

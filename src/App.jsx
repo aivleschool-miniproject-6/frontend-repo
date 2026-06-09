@@ -6,6 +6,7 @@ import BookListPage from "./components/list/pages/BookListPage";
 import BookFormPage from "./components/list/pages/BookFormPage";
 import BookCoverEditor from "./components/edit/BookCoverEditor";
 import BookDetail from "./components/detail/BookDetail";
+import MyPage from "./components/list/pages/MyPage";
 
 function BookListRoute() {
   const navigate = useNavigate();
@@ -50,6 +51,10 @@ function BookEditRoute() {
   );
 }
 
+function MyPageRoute() {
+  return <MyPage />;
+}
+
 function App() {
   return (
     <BrowserRouter>
@@ -65,6 +70,7 @@ function App() {
           <Route path="/books/:id/edit" element={<BookEditRoute />} />
           <Route path="/books/:id/cover-editor" element={<BookCoverEditor />} />
           <Route path="/cover-editor" element={<BookCoverEditor />} />
+          <Route path="/mypage" element={<MyPageRoute />} />
         </Routes>
       </Box>
     </BrowserRouter>

@@ -5,6 +5,7 @@ const navItems = [
   { label: '홈', path: '/' },
   { label: '목록', path: '/books' },
   { label: '등록', path: '/books/new' },
+  { label: '마이페이지', path: '/mypage' },
 ]
 
 function Header() {
