@@ -82,13 +82,6 @@ const BookCoverEditor = () => {
       return
     }
 
-    const apiKey = import.meta.env.VITE_OPENAI_API_KEY
-
-    if (!apiKey) {
-      alert('.env 파일에 VITE_OPENAI_API_KEY를 설정해주세요.')
-      return
-    }
-
     try {
       setIsGenerating(true)
       setSelectedImageIndex(null) 
@@ -101,22 +94,13 @@ const BookCoverEditor = () => {
       }
 
       const finalPrompt = buildStructuredPrompt(combinedInfo, selectedOptions)
-      
-      // 사이즈 무조건 고정
-      const fixedSize = '1024x1536';
 
-      const generatePromises = [
-        generateBookCover(apiKey, finalPrompt, apiConfig.model, fixedSize),
-        generateBookCover(apiKey, finalPrompt, apiConfig.model, fixedSize),
-        generateBookCover(apiKey, finalPrompt, apiConfig.model, fixedSize)
-      ];
-
-      const newImages = await Promise.all(generatePromises);
-      setGeneratedImages(newImages);
-
+      // 백엔드에서 3개 이미지 한 번에 생성 요청
+      const images = await generateBookCover(id || 101, finalPrompt, selectedOptions)
+      setGeneratedImages(images)
     } catch (error) {
-      console.error(error)
-      alert(`이미지 생성 중 오류가 발생했습니다: ${error.message}`)
+      console.error('이미지 생성 실패:', error)
+      alert('이미지 생성 중 오류가 발생했습니다. 다시 시도해주세요.')
       setGeneratedImages([null, null, null])
     } finally {
       setIsGenerating(false)
