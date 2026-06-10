@@ -113,7 +113,7 @@ function CommentForm({ bookId, onPosted }) {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          book_id: Number(bookId),    // 단, BOOK.id가 실제로는 Long이니 숫자형이어야 함
+          book_id: bookId,           // ← Number() 제거, 받은 그대로 사용
           author_id: currentUser.id,
           nickname: currentUser.nickname,
           content: trimmed,
