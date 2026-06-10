@@ -4,9 +4,7 @@ import {
   BACKGROUND_PRESETS,
   LIGHTING_PRESETS,
   TYPOGRAPHY_PRESETS,
-  buildStructuredPrompt,
   compressImageDataUrl,
-  generateBookCover,
 } from '../../../util/bookCoverService'
 import { useAuth } from '../../../context/AuthContext'
 
@@ -191,26 +189,34 @@ export default function BookFormPage({ mode, id, onBack, onSaved }) {
       setSelectedImageIndex(null)
       setGeneratedImages([null, null, null])
 
-      const combinedInfo = {
-        title: form.title,
-        author: form.author,
-        content: `[Book Story]: ${form.content} / [User Design Request]: ${aiPrompt}`,
+      const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/books/cover/generate`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          model: apiConfig.model,
+          quality: apiConfig.quality,
+          title: form.title,
+          genre: form.genre,
+          author: form.author,
+          content: form.content,
+          prompt: aiPrompt,
+          style: aiOptions.style,
+          background: aiOptions.background,
+          lighting: aiOptions.lighting,
+          typography: aiOptions.typography,
+        }),
+      })
+
+      if (!response.ok) {
+        const errBody = await response.text()
+        throw new Error(`이미지 생성 요청 실패 (Status: ${response.status}) - ${errBody}`)
       }
 
-      const finalPrompt = buildStructuredPrompt(combinedInfo, aiOptions)
-      
-      const selectedOptions = {
-      ...aiOptions,
-      model: apiConfig.model,
-      quality: apiConfig.quality
-    }
-
-      const images = await generateBookCover(id || 0, finalPrompt, selectedOptions)
-      setGeneratedImages(images)
-      
+      const data = await response.json()
+      setGeneratedImages(data.images)
     } catch (error) {
       console.error('이미지 생성 실패:', error)
-      alert('이미지 생성 중 오류가 발생했습니다. 다시 시도해주세요.')
+      alert(`이미지 생성 중 오류가 발생했습니다: ${error.message}`)
       setGeneratedImages([null, null, null])
     } finally {
       setIsGenerating(false)
