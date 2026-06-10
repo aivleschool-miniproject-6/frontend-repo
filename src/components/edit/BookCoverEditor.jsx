@@ -6,28 +6,22 @@ import {
   BACKGROUND_PRESETS,
   LIGHTING_PRESETS,
   TYPOGRAPHY_PRESETS,
-  buildStructuredPrompt,
   compressImageDataUrl,
-  generateBookCover,
 } from '../../util/bookCoverService'
 
 const BookCoverEditor = () => {
   const navigate = useNavigate()
   const { id } = useParams()
 
-  const [dbBookInfo, setDbBookInfo] = useState({
-    title: '',
-    author: '',
-    originalContent: '',
-  })
+  const [hasCover, setHasCover] = useState(false)
 
   const [userPrompt, setUserPrompt] = useState('')
 
   const [selectedOptions, setSelectedOptions] = useState({
-    style: 'miki',
-    background: 'beige',
-    lighting: 'daylight',
-    typography: 'serif',
+    style: '수채화',
+    background: '베이지',
+    lighting: '자연광',
+    typography: '클래식 명조',
   })
 
   const [apiConfig, setApiConfig] = useState({
@@ -49,11 +43,7 @@ const BookCoverEditor = () => {
         
         const data = await response.json();
         
-        setDbBookInfo({
-          title: data.title,
-          author: data.author,
-          originalContent: data.content,
-        });
+        setHasCover(!!data.coverImageUrl);
       } catch (error) {
         console.error('DB 연동 에러:', error);
       }
@@ -84,23 +74,33 @@ const BookCoverEditor = () => {
 
     try {
       setIsGenerating(true)
-      setSelectedImageIndex(null) 
-      setGeneratedImages([null, null, null]) 
+      setSelectedImageIndex(null)
+      setGeneratedImages([null, null, null])
 
-      const combinedInfo = {
-        title: dbBookInfo.title,
-        author: dbBookInfo.author,
-        content: `[Book Story]: ${dbBookInfo.originalContent} / [User Design Request]: ${userPrompt}`
+      const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/books/${id}/cover/generate`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          model: apiConfig.model,
+          quality: apiConfig.quality,
+          prompt: userPrompt,
+          style: selectedOptions.style,
+          background: selectedOptions.background,
+          lighting: selectedOptions.lighting,
+          typography: selectedOptions.typography,
+        }),
+      })
+
+      if (!response.ok) {
+        const errBody = await response.text()
+        throw new Error(`이미지 생성 요청 실패 (Status: ${response.status}) - ${errBody}`)
       }
 
-      const finalPrompt = buildStructuredPrompt(combinedInfo, selectedOptions)
-
-      // 백엔드에서 3개 이미지 한 번에 생성 요청
-      const images = await generateBookCover(id || 101, finalPrompt, selectedOptions)
-      setGeneratedImages(images)
+      const data = await response.json()
+      setGeneratedImages(data.images)
     } catch (error) {
       console.error('이미지 생성 실패:', error)
-      alert('이미지 생성 중 오류가 발생했습니다. 다시 시도해주세요.')
+      alert(`이미지 생성 중 오류가 발생했습니다: ${error.message}`)
       setGeneratedImages([null, null, null])
     } finally {
       setIsGenerating(false)
@@ -116,7 +116,10 @@ const BookCoverEditor = () => {
     try {
       const targetId = id || 101;
       const coverImageUrl = await compressImageDataUrl(generatedImages[selectedImageIndex]);
-      const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/books/${targetId}`, {
+      const saveEndpoint = hasCover
+        ? `${import.meta.env.VITE_API_BASE_URL}/books/${targetId}/cover-editor`
+        : `${import.meta.env.VITE_API_BASE_URL}/books/${targetId}/cover`;
+      const response = await fetch(saveEndpoint, {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
