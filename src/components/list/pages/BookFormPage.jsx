@@ -8,6 +8,7 @@ import {
   compressImageDataUrl,
   generateBookCover,
 } from '../../../util/bookCoverService'
+import { useAuth } from '../../../context/AuthContext'
 
 const API = `${import.meta.env.VITE_API_BASE_URL}/books`
 
@@ -80,6 +81,7 @@ const s = {
 
 export default function BookFormPage({ mode, id, onBack, onSaved }) {
   const isEdit = mode === 'edit'
+  const { user } = useAuth()
 
   // 하나의 숫자로 묶어 다루기 
   const [form, setForm] = useState({
@@ -229,7 +231,7 @@ export default function BookFormPage({ mode, id, onBack, onSaved }) {
         price: form.price ? Number(form.price) : null,
         pages: form.pages ? Number(form.pages) : null,
         updatedAt: now,
-        ...(isEdit ? {} : { createdAt: now, coverImageUrl }),
+        ...(isEdit ? {} : { createdAt: now, coverImageUrl, authorId: user?.userId ?? null }),
       }
 
       /////fetch
@@ -246,7 +248,7 @@ export default function BookFormPage({ mode, id, onBack, onSaved }) {
         })
 
       if (!res.ok) {
-        alert('저장에 실패했습니다. json-server가 실행 중인지 확인하세요.')
+        alert('저장에 실패했습니다. 백엔드 서버가 실행 중인지 확인하세요.')
         return
       }
 
