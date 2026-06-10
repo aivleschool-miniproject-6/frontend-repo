@@ -69,9 +69,9 @@ export async function generateBookCover(bookId, prompt, selectedOptions) {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
-      bookId: Number(bookId),
       prompt,
-      selectedOptions
+      model: selectedOptions?.model || 'gpt-image-2',
+      quality: selectedOptions?.quality || 'Medium',
     })
   })
 

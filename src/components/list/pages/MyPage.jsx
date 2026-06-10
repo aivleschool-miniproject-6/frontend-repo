@@ -1,9 +1,20 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import BookCard from '../components/BookCard'
-import { compressImageDataUrl } from '../../../util/bookCoverService'
+import { useAuth } from '../../../context/AuthContext'
 
 const API_BASE = import.meta.env.VITE_API_BASE_URL
+
+function readFavoriteBookIds() {
+  const ids = []
+  for (let i = 0; i < localStorage.length; i++) {
+    const key = localStorage.key(i)
+    if (key?.startsWith('bookFavorite:') && localStorage.getItem(key) === 'true') {
+      ids.push(key.replace('bookFavorite:', ''))
+    }
+  }
+  return ids
+}
 
 const s = {
   page: {
@@ -36,11 +47,6 @@ const s = {
     justifyContent: 'center',
     overflow: 'hidden',
   },
-  profileImg: {
-    width: '100%',
-    height: '100%',
-    objectFit: 'cover',
-  },
   profileIcon: {
     fontSize: 48,
     color: '#9b9b95',
@@ -57,12 +63,6 @@ const s = {
   profileEmail: {
     fontSize: 14,
     color: '#6b6b67',
-    marginBottom: 12,
-  },
-  profileBio: {
-    fontSize: 14,
-    color: '#6b6b67',
-    lineHeight: 1.5,
   },
   tabContainer: {
     display: 'flex',
@@ -104,13 +104,6 @@ const s = {
     color: '#6b6b67',
     fontSize: 14,
   },
-  loadingIcon: {
-    fontSize: 38,
-    display: 'block',
-    marginBottom: 12,
-    color: '#9b9b95',
-    animation: 'spin 1s linear infinite',
-  },
   errorState: {
     textAlign: 'center',
     padding: '60px 40px',
@@ -127,53 +120,59 @@ const s = {
 
 export default function MyPage() {
   const navigate = useNavigate()
-  const [user, setUser] = useState(null)
+  const { isLoggedIn, user, token } = useAuth()
+
+  const [profile, setProfile] = useState(null)
   const [myBooks, setMyBooks] = useState([])
   const [favorites, setFavorites] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
-  const [activeTab, setActiveTab] = useState('mybooks') // 'mybooks' | 'favorites'
+  const [activeTab, setActiveTab] = useState('mybooks')
 
   useEffect(() => {
+    if (!isLoggedIn) {
+      navigate('/login', { replace: true })
+      return
+    }
+
     const loadData = async () => {
       try {
         setLoading(true)
         setError(null)
 
-        // 3개 API 병렬 호출
-        const [userRes, booksRes, favRes] = await Promise.all([
-          fetch(`${API_BASE}/users/1`), // TODO: 사용자 ID는 실제 로그인 시스템에 맞게 조정 필요 (현재는 1로 고정)
-          fetch(`${API_BASE}/users/1/books`),
-          fetch(`${API_BASE}/users/1/favorites`),
+        const authHeader = { Authorization: `Bearer ${token}` }
+
+        // 내 프로필 + 전체 책 목록 + 즐겨찾기 ID 병렬 조회
+        const favoriteIds = readFavoriteBookIds()
+
+        const [profileRes, booksRes] = await Promise.all([
+          fetch(`${API_BASE}/users/me`, { headers: authHeader }),
+          fetch(`${API_BASE}/books`),
         ])
 
-        if (!userRes.ok) throw new Error('사용자 정보를 불러올 수 없습니다.')
-        if (!booksRes.ok) throw new Error('내 작품을 불러올 수 없습니다.')
-        if (!favRes.ok) throw new Error('즐겨찾기를 불러올 수 없습니다.')
+        if (!profileRes.ok) throw new Error('사용자 정보를 불러올 수 없습니다.')
+        if (!booksRes.ok) throw new Error('도서 목록을 불러올 수 없습니다.')
 
-        const userData = await userRes.json()
-        const booksData = await booksRes.json()
-        const favsData = await favRes.json()
+        const profileData = await profileRes.json()
+        const allBooks = await booksRes.json()
 
-        // 프로필 이미지 압축
-        if (userData.profileImageUrl) {
-          userData.profileImageUrl = await compressImageDataUrl(userData.profileImageUrl)
+        // 내 작품: authorId가 내 userId와 같은 책
+        const mine = allBooks.filter((b) => b.authorId === profileData.userId)
+
+        // 즐겨찾기: localStorage에 저장된 bookId로 책 정보 조회
+        let favBooks = []
+        if (favoriteIds.length > 0) {
+          const favResults = await Promise.all(
+            favoriteIds.map((id) =>
+              fetch(`${API_BASE}/books/${id}`).then((r) => (r.ok ? r.json() : null))
+            )
+          )
+          favBooks = favResults.filter(Boolean)
         }
 
-        // 책 ID에서 실제 책 정보 조회
-        const getBookDetails = async (bookIdArray) => {
-          if (!Array.isArray(bookIdArray) || bookIdArray.length === 0) return []
-          const bookIds = bookIdArray.map(item => item.book)
-          const bookDetailPromises = bookIds.map(id => fetch(`${API_BASE}/books/${id}`).then(r => r.json()))
-          return await Promise.all(bookDetailPromises)
-        }
-
-        const myBooksDetails = await getBookDetails(booksData)
-        const favoritesDetails = await getBookDetails(favsData)
-
-        setUser(userData)
-        setMyBooks(Array.isArray(myBooksDetails) ? myBooksDetails : [])
-        setFavorites(Array.isArray(favoritesDetails) ? favoritesDetails : [])
+        setProfile(profileData)
+        setMyBooks(mine)
+        setFavorites(favBooks)
       } catch (err) {
         setError(err.message)
         console.error('마이페이지 데이터 로드 실패:', err)
@@ -183,14 +182,14 @@ export default function MyPage() {
     }
 
     loadData()
-  }, [])
+  }, [isLoggedIn, token, navigate])
 
   if (loading) {
     return (
       <div style={s.page}>
         <div style={s.wrap}>
           <div style={s.loadingState}>
-            <i className="ti ti-loader-2" style={s.loadingIcon} />
+            <i className="ti ti-loader-2" style={{ fontSize: 38, display: 'block', marginBottom: 12, color: '#9b9b95' }} />
             마이페이지를 불러오는 중입니다.
           </div>
         </div>
@@ -212,45 +211,30 @@ export default function MyPage() {
   }
 
   const displayBooks = activeTab === 'mybooks' ? myBooks : favorites
-  const tabCounts = {
-    mybooks: myBooks.length,
-    favorites: favorites.length,
-  }
 
   return (
     <div style={s.page}>
       <div style={s.wrap}>
         {/* 프로필 카드 */}
-        {user && (
+        {profile && (
           <div style={s.profileCard}>
             <div style={s.profileImage}>
-              {user.profileImageUrl ? (
-                <img src={user.profileImageUrl} alt={user.name} style={s.profileImg} />
-              ) : (
-                <i className="ti ti-user" style={s.profileIcon} />
-              )}
+              <i className="ti ti-user" style={s.profileIcon} />
             </div>
             <div style={s.profileInfo}>
-              <div style={s.profileName}>{user.name || '사용자'}</div>
-              <div style={s.profileEmail}>{user.email || '-'}</div>
-              {user.bio && <div style={s.profileBio}>{user.bio}</div>}
+              <div style={s.profileName}>{profile.nickname}</div>
+              <div style={s.profileEmail}>{profile.email}</div>
             </div>
           </div>
         )}
 
         {/* 탭 */}
         <div style={s.tabContainer}>
-          <button
-            style={s.tab(activeTab === 'mybooks')}
-            onClick={() => setActiveTab('mybooks')}
-          >
-            내 작품 ({tabCounts.mybooks})
+          <button style={s.tab(activeTab === 'mybooks')} onClick={() => setActiveTab('mybooks')}>
+            내 작품 ({myBooks.length})
           </button>
-          <button
-            style={s.tab(activeTab === 'favorites')}
-            onClick={() => setActiveTab('favorites')}
-          >
-            즐겨찾기 ({tabCounts.favorites})
+          <button style={s.tab(activeTab === 'favorites')} onClick={() => setActiveTab('favorites')}>
+            즐겨찾기 ({favorites.length})
           </button>
         </div>
 
@@ -258,11 +242,7 @@ export default function MyPage() {
         {displayBooks.length > 0 ? (
           <div style={s.gridContainer}>
             {displayBooks.map((book) => (
-              <BookCard
-                key={book.id}
-                book={book}
-                onClick={() => navigate(`/books/${book.id}`)}
-              />
+              <BookCard key={book.id} book={book} onClick={() => navigate(`/books/${book.id}`)} />
             ))}
           </div>
         ) : (
