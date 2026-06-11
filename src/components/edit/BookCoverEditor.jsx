@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
-import { useNavigate, useParams } from 'react-router-dom' // react-dom -> react-router-dom으로 수정
+import { useNavigate, useParams } from 'react-router-dom'
+import { useAuth } from '../../context/AuthContext'
 import styles from './editor.module.css'
 import {
   STYLE_PRESETS,
@@ -12,6 +13,7 @@ import {
 const BookCoverEditor = () => {
   const navigate = useNavigate()
   const { id } = useParams()
+  const { token } = useAuth()
 
   const [hasCover, setHasCover] = useState(false)
 
@@ -79,7 +81,10 @@ const BookCoverEditor = () => {
 
       const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/books/${id}/cover/generate`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
         body: JSON.stringify({
           model: apiConfig.model,
           quality: apiConfig.quality,
@@ -123,6 +128,7 @@ const BookCoverEditor = () => {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
         },
         body: JSON.stringify({
           coverImageUrl
