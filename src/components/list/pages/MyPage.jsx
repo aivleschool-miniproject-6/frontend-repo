@@ -98,6 +98,44 @@ const s = {
     marginBottom: 12,
     color: '#9b9b95',
   },
+  authorList: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: 10,
+  },
+  authorCard: {
+    background: '#fff',
+    border: '0.5px solid rgba(0,0,0,0.12)',
+    borderRadius: 12,
+    padding: '16px 20px',
+    display: 'flex',
+    alignItems: 'center',
+    gap: 16,
+    cursor: 'pointer',
+  },
+  authorAvatar: {
+    width: 44,
+    height: 44,
+    borderRadius: '50%',
+    background: '#1a1a18',
+    color: '#fff',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    fontSize: 18,
+    fontWeight: 700,
+    flexShrink: 0,
+  },
+  authorName: {
+    fontSize: 15,
+    fontWeight: 600,
+    color: '#1a1a18',
+  },
+  authorEmail: {
+    fontSize: 12,
+    color: '#6b6b67',
+    marginTop: 2,
+  },
   loadingState: {
     textAlign: 'center',
     padding: '60px 40px',
@@ -125,6 +163,7 @@ export default function MyPage() {
   const [profile, setProfile] = useState(null)
   const [myBooks, setMyBooks] = useState([])
   const [favorites, setFavorites] = useState([])
+  const [followings, setFollowings] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
   const [activeTab, setActiveTab] = useState('mybooks')
@@ -145,9 +184,10 @@ export default function MyPage() {
         // 내 프로필 + 전체 책 목록 + 즐겨찾기 ID 병렬 조회
         const favoriteIds = readFavoriteBookIds()
 
-        const [profileRes, booksRes] = await Promise.all([
+        const [profileRes, booksRes, followingsRes] = await Promise.all([
           fetch(`${API_BASE}/users/me`, { headers: authHeader }),
           fetch(`${API_BASE}/books`),
+          fetch(`${API_BASE}/users/followings`, { headers: authHeader }),
         ])
 
         if (!profileRes.ok) throw new Error('사용자 정보를 불러올 수 없습니다.')
@@ -170,9 +210,22 @@ export default function MyPage() {
           favBooks = favResults.filter(Boolean)
         }
 
+        // 팔로잉 작가 정보 조회
+        let followingAuthors = []
+        if (followingsRes.ok) {
+          const followingList = await followingsRes.json()
+          const authorResults = await Promise.all(
+            followingList.map((f) =>
+              fetch(`${API_BASE}/users/${f.followingId}`).then((r) => (r.ok ? r.json() : null))
+            )
+          )
+          followingAuthors = authorResults.filter(Boolean)
+        }
+
         setProfile(profileData)
         setMyBooks(mine)
         setFavorites(favBooks)
+        setFollowings(followingAuthors)
       } catch (err) {
         setError(err.message)
         console.error('마이페이지 데이터 로드 실패:', err)
@@ -236,10 +289,38 @@ export default function MyPage() {
           <button style={s.tab(activeTab === 'favorites')} onClick={() => setActiveTab('favorites')}>
             즐겨찾기 ({favorites.length})
           </button>
+          <button style={s.tab(activeTab === 'followings')} onClick={() => setActiveTab('followings')}>
+            팔로잉 ({followings.length})
+          </button>
         </div>
 
         {/* 도서 목록 */}
-        {displayBooks.length > 0 ? (
+        {activeTab === 'followings' ? (
+          followings.length > 0 ? (
+            <div style={s.authorList}>
+              {followings.map((author) => (
+                <div
+                  key={author.userId}
+                  style={s.authorCard}
+                  onClick={() => navigate(`/authors/${author.userId}`)}
+                >
+                  <div style={s.authorAvatar}>
+                    {author.nickname?.slice(0, 1).toUpperCase() ?? '?'}
+                  </div>
+                  <div>
+                    <div style={s.authorName}>{author.nickname}</div>
+                    <div style={s.authorEmail}>{author.email}</div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div style={s.emptyState}>
+              <i className="ti ti-user-off" style={s.emptyIcon} />
+              팔로잉한 작가가 없습니다.
+            </div>
+          )
+        ) : displayBooks.length > 0 ? (
           <div style={s.gridContainer}>
             {displayBooks.map((book) => (
               <BookCard key={book.id} book={book} onClick={() => navigate(`/books/${book.id}`)} />

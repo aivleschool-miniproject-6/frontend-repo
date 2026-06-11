@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState, useCallback } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { fmtDate, getCoverColor } from '../list/components/BookCard'
-import {useAuth} from '../../context/AuthContext' //유저 정보 경로
+import {useAuth} from '../../context/AuthContext'
 
 const API = `${import.meta.env.VITE_API_BASE_URL}/books`
 const COMMENTS_API = `${import.meta.env.VITE_API_BASE_URL}/comments`
@@ -341,6 +342,7 @@ const s = {
 // ─────────────────────────────────────────────
 export default function BookDetail({ id, onBack, onEdit, onEditCover, onDeleted }) {
   const { token } = useAuth()
+  const navigate = useNavigate()
   const [book, setBook] = useState(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
@@ -524,7 +526,12 @@ export default function BookDetail({ id, onBack, onEdit, onEditCover, onDeleted 
                 {book.genre || '미분류'}
               </span>
               <h1 style={s.title}>{book.title}</h1>
-              <div style={s.author}>{book.author || '저자 미상'}</div>
+              <div
+                style={{ ...s.author, ...(book.authorId ? { cursor: 'pointer', textDecoration: 'underline' } : {}) }}
+                onClick={() => book.authorId && navigate(`/authors/${book.authorId}`)}
+              >
+                {book.author || '저자 미상'}
+              </div>
               <div style={s.metaGrid}>
                 {meta.map((item) => (
                   <div key={item.label} style={s.metaItem}>
