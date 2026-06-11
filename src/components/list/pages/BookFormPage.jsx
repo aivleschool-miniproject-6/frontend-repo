@@ -79,7 +79,7 @@ const s = {
 
 export default function BookFormPage({ mode, id, onBack, onSaved }) {
   const isEdit = mode === 'edit'
-  const { user } = useAuth()
+  const { user, token } = useAuth()
 
   // 하나의 숫자로 묶어 다루기 
   const [form, setForm] = useState({
@@ -191,7 +191,10 @@ export default function BookFormPage({ mode, id, onBack, onSaved }) {
 
       const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/books/cover/generate`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
         body: JSON.stringify({
           model: apiConfig.model,
           quality: apiConfig.quality,
@@ -241,15 +244,16 @@ export default function BookFormPage({ mode, id, onBack, onSaved }) {
       }
 
       /////fetch
+      const authHeader = token ? { Authorization: `Bearer ${token}` } : {}
       const res = isEdit
         ? await fetch(`${API}/${id}`, {
           method: 'PATCH',
-          headers: { 'Content-Type': 'application/json' },
+          headers: { 'Content-Type': 'application/json', ...authHeader },
           body: JSON.stringify(body),
         })
         : await fetch(API, {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: { 'Content-Type': 'application/json', ...authHeader },
           body: JSON.stringify(body),
         })
 

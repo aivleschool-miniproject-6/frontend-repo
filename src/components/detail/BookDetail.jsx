@@ -95,6 +95,7 @@ function CommentForm({ bookId, onPosted }) {
   const handleSubmit = async () => {
     const trimmed = content.trim()
     if (!trimmed) { setError('댓글 내용을 입력해 주세요.'); return }
+    if (!rating) { setError('별점을 선택해 주세요.'); return }
     try {
       setSubmitting(true)
       setError(null)
@@ -105,7 +106,7 @@ function CommentForm({ bookId, onPosted }) {
         },
         body: JSON.stringify({
           content: trimmed,
-          rating: rating > 0 ? rating : null,
+          rating,
         }),
       })
       if (!res.ok) throw new Error('댓글 등록에 실패했습니다.')
@@ -339,6 +340,7 @@ const s = {
 // 메인 컴포넌트
 // ─────────────────────────────────────────────
 export default function BookDetail({ id, onBack, onEdit, onEditCover, onDeleted }) {
+  const { token } = useAuth()
   const [book, setBook] = useState(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
@@ -362,11 +364,8 @@ export default function BookDetail({ id, onBack, onEdit, onEditCover, onDeleted 
         setBook(data)
         setViews(nextViews)
         setTimeout(() => {
-          fetch(`${API}/${id}`, {
-            method: 'PATCH',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ viewCount: nextViews }),
-          }).catch((e) => console.warn('조회수 백그라운드 우회 처리:', e))
+          fetch(`${API}/${id}/views`, { method: 'PATCH' })
+            .catch((e) => console.warn('조회수 백그라운드 처리:', e))
         }, 300)
       } catch (e) {
         setError(e.message)
@@ -415,7 +414,10 @@ export default function BookDetail({ id, onBack, onEdit, onEditCover, onDeleted 
   }, [comments])
 
   const handleDelete = async () => {
-    await fetch(`${API}/${id}`, { method: 'DELETE' })
+    await fetch(`${API}/${id}`, {
+      method: 'DELETE',
+      headers: token ? { Authorization: `Bearer ${token}` } : {},
+    })
     setShowDeleteModal(false)
     onDeleted?.()
   }
