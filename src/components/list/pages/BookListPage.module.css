@@ -6,10 +6,14 @@
 .main { flex: 1; min-width: 0; display: flex; flex-direction: column; overflow: hidden; background: #f7f6f3; }
 .topbar { height: 58px; flex-shrink: 0; display: flex; align-items: center; gap: 12px; padding: 0 24px; background: #fff; border-bottom: 1px solid rgba(0, 0, 0, 0.08); }
 .title { flex: 1; color: #1a1a18; font-size: 17px; font-weight: 700; }
-.searchWrap { position: relative; }
+.searchWrap { position: relative; display: flex; align-items: center; gap: 6px; }
 .searchIcon { position: absolute; left: 9px; top: 50%; transform: translateY(-50%); color: #6b6b67; font-size: 15px; pointer-events: none; }
 .searchInput { width: 220px; padding: 8px 12px 8px 34px; border: 1px solid rgba(0, 0, 0, 0.16); border-radius: 999px; outline: none; background: #f7f7f5; color: #1a1a18; font-size: 13px; }
 .searchInput:focus { background: var(--card-bg); border-color: rgba(0, 0, 0, 0.32); }
+.advBtn { width: 32px; height: 32px; border: 1px solid rgba(0,0,0,0.16); border-radius: 8px; background: #f7f7f5; color: #6b6b67; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 15px; transition: all 0.15s; flex-shrink: 0; position: relative; }
+.advBtn:hover { background: #efefed; color: #1a1a18; }
+.advBtnActive { background: #eef0ff; border-color: #6366f1; color: #6366f1; }
+.advBtnDot::after { content: ''; position: absolute; top: 4px; right: 4px; width: 6px; height: 6px; border-radius: 50%; background: #6366f1; }
 .subbar { height: 48px; flex-shrink: 0; display: flex; align-items: center; justify-content: space-between; padding: 0 24px; background: var(--card-bg); border-bottom: 1px solid rgba(0, 0, 0, 0.08); }
 .subLeft { display: flex; align-items: center; gap: 8px; }
 .count { color: #555; font-size: 13px; font-weight: 600; }

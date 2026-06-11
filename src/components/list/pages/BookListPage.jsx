@@ -3,9 +3,11 @@ import { useSearchParams } from 'react-router-dom'
 import Sidebar from '../components/Sidebar'
 import BookCard from '../components/BookCard'
 import BookListItem from '../components/BookListItem'
+import AdvancedSearchPanel, { DEFAULT_ADVANCED_FILTERS } from '../../common/AdvancedSearchPanel'
 import styles from './BookListPage.module.css'
 
 const API = `${import.meta.env.VITE_API_BASE_URL}/books`
+const COMMENTS_API = `${import.meta.env.VITE_API_BASE_URL}/comments`
 const ALL = 'ALL'
 const FAVORITES = 'FAVORITES'
 
@@ -35,6 +37,18 @@ export default function BookListPage({ onClickNew, onClickBook }) {
   const [view, setView] = useState('grid')
   const [favoriteIds, setFavoriteIds] = useState(() => readFavoriteIds())
   const [sortBy, setSortBy] = useState('register')
+  const [advancedOpen, setAdvancedOpen] = useState(() =>
+    ['publisher', 'pubDateFrom', 'pubDateTo', 'priceMin', 'priceMax', 'minRating'].some((k) => searchParams.has(k))
+  )
+  const [advFilters, setAdvFilters] = useState(() => ({
+    publisher: searchParams.get('publisher') || DEFAULT_ADVANCED_FILTERS.publisher,
+    pubDateFrom: searchParams.get('pubDateFrom') || DEFAULT_ADVANCED_FILTERS.pubDateFrom,
+    pubDateTo: searchParams.get('pubDateTo') || DEFAULT_ADVANCED_FILTERS.pubDateTo,
+    priceMin: Number(searchParams.get('priceMin') ?? DEFAULT_ADVANCED_FILTERS.priceMin),
+    priceMax: Number(searchParams.get('priceMax') ?? DEFAULT_ADVANCED_FILTERS.priceMax),
+    minRating: Number(searchParams.get('minRating') ?? DEFAULT_ADVANCED_FILTERS.minRating),
+  }))
+  const [ratingMap, setRatingMap] = useState({}) // bookId -> avgRating
 
   // ✅ 추가: SearchBar에서 URL 변경 시 query 동기화
   useEffect(() => {
@@ -59,6 +73,25 @@ export default function BookListPage({ onClickNew, onClickBook }) {
   }, [])
 
   useEffect(() => {
+    fetch(COMMENTS_API)
+      .then((r) => r.ok ? r.json() : [])
+      .then((comments) => {
+        const map = {}
+        comments.forEach((c) => {
+          if (!c.book_id || !c.rating) return
+          const id = String(c.book_id)
+          if (!map[id]) map[id] = { sum: 0, count: 0 }
+          map[id].sum += c.rating
+          map[id].count += 1
+        })
+        const avg = {}
+        Object.entries(map).forEach(([id, { sum, count }]) => { avg[id] = sum / count })
+        setRatingMap(avg)
+      })
+      .catch(() => {})
+  }, [])
+
+  useEffect(() => {
     const refresh = () => setFavoriteIds(readFavoriteIds())
     window.addEventListener('focus', refresh)
     window.addEventListener('storage', refresh)
@@ -78,8 +111,21 @@ export default function BookListPage({ onClickNew, onClickBook }) {
     setBooks((prev) => prev.filter((b) => b.id !== id))
   }
 
+  const hasAdvanced = useMemo(() => {
+    const d = DEFAULT_ADVANCED_FILTERS
+    return (
+      advFilters.publisher !== d.publisher ||
+      advFilters.pubDateFrom !== d.pubDateFrom ||
+      advFilters.pubDateTo !== d.pubDateTo ||
+      advFilters.priceMin !== d.priceMin ||
+      advFilters.priceMax !== d.priceMax ||
+      advFilters.minRating !== d.minRating
+    )
+  }, [advFilters])
+
   const filtered = useMemo(() => {
     const lowerQuery = query.toLowerCase()
+    const lowerPublisher = advFilters.publisher.toLowerCase()
     return books.filter((book) => {
       const genreOk =
         genre === ALL || (genre === FAVORITES ? favoriteIds.has(String(book.id)) : book.genre === genre)
@@ -87,9 +133,21 @@ export default function BookListPage({ onClickNew, onClickBook }) {
         !query ||
         book.title?.toLowerCase().includes(lowerQuery) ||
         book.author?.toLowerCase().includes(lowerQuery)
-      return genreOk && queryOk
+      const publisherOk =
+        !advFilters.publisher || book.publisher?.toLowerCase().includes(lowerPublisher)
+      const priceOk =
+        (book.price == null || book.price >= advFilters.priceMin) &&
+        (book.price == null || advFilters.priceMax === 100000 || book.price <= advFilters.priceMax)
+      const pubDateFromOk =
+        !advFilters.pubDateFrom || (book.pubDate && book.pubDate >= advFilters.pubDateFrom)
+      const pubDateToOk =
+        !advFilters.pubDateTo || (book.pubDate && book.pubDate <= advFilters.pubDateTo)
+      const ratingOk =
+        advFilters.minRating === 0 ||
+        (ratingMap[String(book.id)] ?? 0) >= advFilters.minRating
+      return genreOk && queryOk && publisherOk && priceOk && pubDateFromOk && pubDateToOk && ratingOk
     })
-  }, [books, genre, favoriteIds, query])
+  }, [books, genre, favoriteIds, query, advFilters, ratingMap])
 
   const sorted = useMemo(() => {
     const arr = [...filtered]
@@ -114,8 +172,24 @@ export default function BookListPage({ onClickNew, onClickBook }) {
               value={query}
               onChange={(e) => setQuery(e.target.value)}
             />
+            <button
+              className={`${styles.advBtn} ${advancedOpen ? styles.advBtnActive : ''} ${hasAdvanced ? styles.advBtnDot : ''}`}
+              onClick={() => setAdvancedOpen((v) => !v)}
+              title="상세검색"
+              type="button"
+            >
+              <i className="ti ti-adjustments-horizontal" />
+            </button>
           </div>
         </div>
+
+        {advancedOpen && (
+          <AdvancedSearchPanel
+            filters={advFilters}
+            onChange={setAdvFilters}
+            onReset={() => setAdvFilters(DEFAULT_ADVANCED_FILTERS)}
+          />
+        )}
 
         <div className={styles.subbar}>
           <div className={styles.subLeft}>
