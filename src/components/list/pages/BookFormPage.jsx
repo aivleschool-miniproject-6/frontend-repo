@@ -25,7 +25,7 @@ const s = {
   },
   inner: { flex: 1, overflow: 'auto', padding: 24 },
   wrap: { maxWidth: 680, margin: '0 auto' },
-  pageTitle: { fontSize: 18, fontWeight: 500, color: '#1a1a18', marginBottom: 6 },
+  pageTitle: { fontSize: 18, fontWeight: 500, color: '#1a1a18', margin: 6 },
   pageSub: { fontSize: 13, color: '#6b6b67', marginBottom: 20 },
   card: {
     background: '#fff', border: '0.5px solid rgba(0,0,0,0.12)',
@@ -38,22 +38,22 @@ const s = {
   formGroup: { marginBottom: 14 },
   label: {
     fontSize: 12, color: '#6b6b67',
-    display: 'block', marginBottom: 5,
+    display: 'block', marginBottom: 5 
   },
   req: { color: '#e74c3c' },
   input: (err) => ({
-    width: '100%', padding: '8px 12px',
+    width: '100%', padding: '8px 12px ', boxSizing:'border-box',
     border: `0.5px solid ${err ? '#e74c3c' : 'rgba(0,0,0,0.22)'}`,
     borderRadius: 8, fontSize: 13, background: '#fff', color: '#1a1a18', outline: 'none',
   }),
   textarea: (err) => ({
-    width: '100%', padding: '8px 12px',
+    width: '100%', padding: '8px 12px',  boxSizing:'border-box',
     border: `0.5px solid ${err ? '#e74c3c' : 'rgba(0,0,0,0.22)'}`,
     borderRadius: 8, fontSize: 13, background: '#fff', color: '#1a1a18',
     minHeight: 110, resize: 'vertical', lineHeight: 1.6, outline: 'none',
   }),
   select: (err) => ({
-    width: '100%', padding: '8px 12px',
+    width: '100%', padding: '8px 12px ',
     border: `0.5px solid ${err ? '#e74c3c' : 'rgba(0,0,0,0.22)'}`,
     borderRadius: 8, fontSize: 13, background: '#fff', color: '#1a1a18', outline: 'none',
   }),

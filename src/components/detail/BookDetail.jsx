@@ -1,17 +1,6 @@
 import { useEffect, useMemo, useState, useCallback } from 'react'
 import { fmtDate, getCoverColor } from '../list/components/BookCard'
-
-// [실제 운영 환경] 인증 컨텍스트나 전역 상태(Zustand 등)에서 실제 로그인 유저 정보를 가져옵니다.
-// 현재는 전역 로그인 세션이 합쳐지기 전이므로 가짜 객체로 Interface만 맞춰둡니다.
-function useAuth() {
-  return {
-    currentUser: {
-      id: 1221,            // 백엔드 USER 테이블의 Long 타입 고유 PK
-      nickname: "길동"
-    },
-    isLoggedIn: true
-  }
-}
+import {useAuth} from '../../context/AuthContext' //유저 정보 경로
 
 const API = `${import.meta.env.VITE_API_BASE_URL}/books`
 const COMMENTS_API = `${import.meta.env.VITE_API_BASE_URL}/comments`
@@ -97,7 +86,7 @@ function AverageRating({ comments }) {
 // 댓글 작성 폼 (POST /books/{bookId}/comments)
 // ─────────────────────────────────────────────
 function CommentForm({ bookId, onPosted }) {
-  const { currentUser } = useAuth()
+  const { user, token, isLoggedIn } = useAuth()
   const [content, setContent] = useState('')
   const [rating, setRating] = useState(0)
   const [submitting, setSubmitting] = useState(false)
@@ -111,11 +100,13 @@ function CommentForm({ bookId, onPosted }) {
       setError(null)
       const res = await fetch(`${COMMENTS_API}`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json' ,
+          ...(token ? {Authorization: `Bearer ${token}`} : {}),
+        },
         body: JSON.stringify({
           book_id: bookId,           // ← Number() 제거, 받은 그대로 사용
-          author_id: currentUser.id,
-          nickname: currentUser.nickname,
+          author_id: user.userId,
+          nickname: user.nickname,
           content: trimmed,
           rating: rating > 0 ? rating : null,
         }),
@@ -129,6 +120,15 @@ function CommentForm({ bookId, onPosted }) {
     } finally {
       setSubmitting(false)
     }
+  }
+  if (!isLoggedIn) {
+    return (
+      <div style={s.formWrap}>
+        <p style={{ fontSize: 13, color: '#6b6b67', textAlign: 'center', margin: 0 }}>
+          댓글을 작성하려면 로그인이 필요합니다.
+        </p>
+      </div>
+    )
   }
 
   return (
@@ -164,7 +164,7 @@ function CommentForm({ bookId, onPosted }) {
 // 댓글 단건 아이템 (PATCH & DELETE /comments/{id})
 // ─────────────────────────────────────────────
 function CommentItem({ comment, onDeleted, onUpdated }) {
-  const { currentUser } = useAuth()
+  const { user, token } = useAuth()
   const [editing, setEditing] = useState(false)
   const [editContent, setEditContent] = useState(comment.content)
   const [editRating, setEditRating] = useState(comment.rating ?? 0)
@@ -178,7 +178,9 @@ function CommentItem({ comment, onDeleted, onUpdated }) {
       setSaving(true)
       const res = await fetch(`${COMMENTS_API}/${comment.id}`, {
         method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json' ,
+          ...(token ? {Authorization : `Bearer ${token}`} : {}),
+        },
         body: JSON.stringify({
           content: trimmed,
           rating: editRating > 0 ? editRating : null,
@@ -193,7 +195,9 @@ function CommentItem({ comment, onDeleted, onUpdated }) {
   }
 
   const handleDelete = async () => {
-    await fetch(`${COMMENTS_API}/${comment.id}`, { method: 'DELETE' })
+    await fetch(`${COMMENTS_API}/${comment.id}`, { method: 'DELETE' ,
+      headers: token ? { Authorization: `Bearer ${token}` } : {},
+    })
     setShowDeleteModal(false)
     onDeleted?.()
   }
@@ -224,7 +228,7 @@ function CommentItem({ comment, onDeleted, onUpdated }) {
         </div>
 
         {/* UX 권한 검증: 내가 쓴 댓글(author_id와 내 고유 id 일치)일 때만 수정/삭제 버튼 노출 */}
-        {comment.author_id === currentUser?.id && (
+        {comment.author_id === user?.userId && (
           <div style={s.commentActions}>
             <button style={s.commentActionBtn} onClick={() => { setEditing(true); setEditContent(comment.content); setEditRating(comment.rating ?? 0) }}>
               <i className="ti ti-edit" style={{ fontSize: 13 }} />
