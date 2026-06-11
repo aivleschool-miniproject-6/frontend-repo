@@ -3,7 +3,7 @@ import { useSearchParams } from 'react-router-dom'
 import Sidebar from '../components/Sidebar'
 import BookCard from '../components/BookCard'
 import BookListItem from '../components/BookListItem'
-import AdvancedSearchPanel, { DEFAULT_ADVANCED_FILTERS } from '../../common/AdvancedSearchPanel'
+import AdvancedSearchPanel, { DEFAULT_ADVANCED_FILTERS, PRICE_MAX } from '../../common/AdvancedSearchPanel'
 import styles from './BookListPage.module.css'
 
 const API = `${import.meta.env.VITE_API_BASE_URL}/books`
@@ -78,7 +78,7 @@ export default function BookListPage({ onClickNew, onClickBook }) {
       .then((comments) => {
         const map = {}
         comments.forEach((c) => {
-          if (!c.book_id || !c.rating) return
+          if (!c.book_id || !c.rating || typeof c.rating !== 'number') return
           const id = String(c.book_id)
           if (!map[id]) map[id] = { sum: 0, count: 0 }
           map[id].sum += c.rating
@@ -88,7 +88,7 @@ export default function BookListPage({ onClickNew, onClickBook }) {
         Object.entries(map).forEach(([id, { sum, count }]) => { avg[id] = sum / count })
         setRatingMap(avg)
       })
-      .catch(() => {})
+      .catch((e) => console.error('평점 데이터 로드 실패:', e))
   }, [])
 
   useEffect(() => {
@@ -137,7 +137,7 @@ export default function BookListPage({ onClickNew, onClickBook }) {
         !advFilters.publisher || book.publisher?.toLowerCase().includes(lowerPublisher)
       const priceOk =
         (book.price == null || book.price >= advFilters.priceMin) &&
-        (book.price == null || advFilters.priceMax === 100000 || book.price <= advFilters.priceMax)
+        (book.price == null || advFilters.priceMax === PRICE_MAX || book.price <= advFilters.priceMax)
       const pubDateFromOk =
         !advFilters.pubDateFrom || (book.pubDate && book.pubDate >= advFilters.pubDateFrom)
       const pubDateToOk =

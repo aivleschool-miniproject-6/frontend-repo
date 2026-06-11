@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import AdvancedSearchPanel, { DEFAULT_ADVANCED_FILTERS } from '../common/AdvancedSearchPanel';
+import AdvancedSearchPanel, { DEFAULT_ADVANCED_FILTERS, PRICE_MAX } from '../common/AdvancedSearchPanel';
 import styles from './main.module.css';
 
 const SearchBar = () => {
@@ -24,7 +24,7 @@ const SearchBar = () => {
     if (advFilters.pubDateFrom) params.set('pubDateFrom', advFilters.pubDateFrom);
     if (advFilters.pubDateTo) params.set('pubDateTo', advFilters.pubDateTo);
     if (advFilters.priceMin > 0) params.set('priceMin', String(advFilters.priceMin));
-    if (advFilters.priceMax < 100000) params.set('priceMax', String(advFilters.priceMax));
+    if (advFilters.priceMax < PRICE_MAX) params.set('priceMax', String(advFilters.priceMax));
     if (advFilters.minRating > 0) params.set('minRating', String(advFilters.minRating));
     navigate(`/books?${params.toString()}`);
   };
