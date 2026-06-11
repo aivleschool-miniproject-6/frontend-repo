@@ -323,7 +323,12 @@ export default function MyPage() {
         ) : displayBooks.length > 0 ? (
           <div style={s.gridContainer}>
             {displayBooks.map((book) => (
-              <BookCard key={book.id} book={book} onClick={() => navigate(`/books/${book.id}`)} />
+              <BookCard
+                key={book.id}
+                book={book}
+                onClick={() => navigate(`/books/${book.id}`)}
+                favoriteTop={activeTab === 'favorites'}
+              />
             ))}
           </div>
         ) : (

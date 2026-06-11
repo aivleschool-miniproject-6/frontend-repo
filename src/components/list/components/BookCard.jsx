@@ -20,7 +20,7 @@ export function fmtDate(dateStr) {
   return `${y}.${parseInt(m, 10)}`
 }
 
-export default function BookCard({ book, rank, onClick, onDelete }) {
+export default function BookCard({ book, rank, onClick, onDelete, favoriteTop = false }) {
   const { bg, ic } = getCoverColor(book.genre)
   const [favorite, setFavorite] = useState(
     () => localStorage.getItem(`bookFavorite:${book.id}`) === 'true'
@@ -38,15 +38,17 @@ export default function BookCard({ book, rank, onClick, onDelete }) {
     <div className={styles.card} onClick={onClick}>
       <div className={styles.cover} style={{ background: bg }}>
         {rank && <span className={styles.rank}>{rank}</span>}
+        {!favoriteTop && (
+          <button
+            className={styles.deleteBtn}
+            onClick={(e) => { e.stopPropagation(); onDelete && onDelete() }}
+            title="삭제"
+          >
+            <i className="ti ti-trash" />
+          </button>
+        )}
         <button
-          className={styles.deleteBtn}
-          onClick={(e) => { e.stopPropagation(); onDelete && onDelete() }}
-          title="삭제"
-        >
-          <i className="ti ti-trash" />
-        </button>
-        <button
-          className={`${styles.favoriteBtn} ${favorite ? styles.favoriteBtnActive : ''}`}
+          className={`${favoriteTop ? styles.favoriteBtnTop : styles.favoriteBtn} ${favorite ? styles.favoriteBtnActive : ''}`}
           onClick={handleFavorite}
           title={favorite ? '즐겨찾기 해제' : '즐겨찾기 추가'}
         >

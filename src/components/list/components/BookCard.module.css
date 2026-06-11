@@ -16,6 +16,8 @@
 .deleteBtn:hover { background: #c0392b; color: #fff; }
 .favoriteBtn { position: absolute; bottom: 12px; right: 12px; width: 32px; height: 32px; border-radius: 50%; background: rgba(255,255,255,0.92); border: 1px solid rgba(0,0,0,0.15); display: flex; align-items: center; justify-content: center; cursor: pointer; color: #9b9b95; font-size: 15px; opacity: 0; z-index: 1; box-shadow: 0 2px 8px rgba(0,0,0,0.18); transition: opacity 0.15s, background 0.15s, color 0.15s; }
 .card:hover .favoriteBtn { opacity: 1; }
+.favoriteBtnTop { position: absolute; top: 12px; right: 12px; width: 32px; height: 32px; border-radius: 50%; background: rgba(255,255,255,0.92); border: 1px solid rgba(0,0,0,0.15); display: flex; align-items: center; justify-content: center; cursor: pointer; color: #9b9b95; font-size: 15px; opacity: 0; z-index: 1; box-shadow: 0 2px 8px rgba(0,0,0,0.18); transition: opacity 0.15s, background 0.15s, color 0.15s; }
+.card:hover .favoriteBtnTop { opacity: 1; }
 .favoriteBtnActive { opacity: 1 !important; color: #f59e0b; border-color: rgba(245, 158, 11, 0.4); }
 .favoriteBtnActive:hover { background: #fff7e8; }
 .body { padding: 16px 16px 15px; }
