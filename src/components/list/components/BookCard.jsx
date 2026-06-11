@@ -61,7 +61,16 @@ export default function BookCard({ book, rank, onClick, onDelete, favoriteTop = 
         )}
       </div>
       <div className={styles.body}>
-        <span className={styles.genre}>{book.genre}</span>
+        <div className={styles.genreRow}>
+          <span className={styles.genre} style={{ background: bg, color: ic }}>{book.genre}</span>
+          {book.averageRating != null && (
+            <div className={styles.rating}>
+              <i className="ti ti-star-filled" style={{ fontSize: 11, color: '#f59e0b' }} />
+              <span className={styles.ratingScore}>{book.averageRating.toFixed(1)}</span>
+              <span className={styles.ratingCount}>({book.ratingCount})</span>
+            </div>
+          )}
+        </div>
         <div className={styles.title}>{book.title}</div>
         <div className={styles.author}>{book.author} · {book.publisher}</div>
         <div className={styles.bottom}>
