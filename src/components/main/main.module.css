@@ -4,22 +4,72 @@
   margin: 60px 0 50px;
 }
 
-.searchBox {
+.searchBoxWrap {
   width: 650px;
+  display: flex;
+  flex-direction: column;
+}
+
+.searchBox {
+  width: 100%;
   height: 55px;
   display: flex;
   align-items: center;
   background: var(--card-bg);
-  padding: 0 25px;
+  padding: 0 16px 0 25px;
   border-radius: 30px;
-  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.03); 
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.03);
   border: 1px solid rgba(0,0,0,0.02);
   transition: all 0.3s ease;
+  gap: 8px;
 }
 
 .searchBox:focus-within {
-  box-shadow: 0 10px 30px rgba(99, 102, 241, 0.15); 
+  box-shadow: 0 10px 30px rgba(99, 102, 241, 0.15);
   transform: translateY(-2px);
+}
+
+.advToggleBtn {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 5px 12px;
+  border: 1px solid rgba(0,0,0,0.12);
+  border-radius: 999px;
+  background: #f7f7f5;
+  color: #6b6b67;
+  cursor: pointer;
+  white-space: nowrap;
+  font-size: 0.85rem;
+  transition: all 0.15s;
+  flex-shrink: 0;
+  position: relative;
+}
+
+.advToggleBtn:hover { background: #efefed; color: #1a1a18; }
+.advToggleActive { background: #eef0ff; border-color: #6366f1; color: #6366f1; }
+.advToggleDot::after { content: ''; position: absolute; top: 3px; right: 3px; width: 6px; height: 6px; border-radius: 50%; background: #6366f1; }
+
+.searchBtn {
+  padding: 7px 18px;
+  background: var(--primary-color, #6366f1);
+  color: #fff;
+  border: none;
+  border-radius: 999px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: opacity 0.15s;
+}
+.searchBtn:hover { opacity: 0.88; }
+
+.advPanelWrap {
+  margin-top: 8px;
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.08);
+  border: 1px solid rgba(0,0,0,0.08);
 }
 
 .searchIcon {
