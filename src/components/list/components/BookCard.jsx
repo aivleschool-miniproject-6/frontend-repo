@@ -1,4 +1,5 @@
-﻿import styles from './BookCard.module.css'
+﻿import { useState } from 'react'
+import styles from './BookCard.module.css'
 
 const COVER_COLORS = {
   소설: { bg: '#E1F5EE', ic: '#0F6E56' },
@@ -21,6 +22,17 @@ export function fmtDate(dateStr) {
 
 export default function BookCard({ book, rank, onClick, onDelete }) {
   const { bg, ic } = getCoverColor(book.genre)
+  const [favorite, setFavorite] = useState(
+    () => localStorage.getItem(`bookFavorite:${book.id}`) === 'true'
+  )
+
+  const handleFavorite = (e) => {
+    e.stopPropagation()
+    const next = !favorite
+    setFavorite(next)
+    localStorage.setItem(`bookFavorite:${book.id}`, String(next))
+    window.dispatchEvent(new Event('bookFavoriteChange'))
+  }
 
   return (
     <div className={styles.card} onClick={onClick}>
@@ -32,6 +44,13 @@ export default function BookCard({ book, rank, onClick, onDelete }) {
           title="삭제"
         >
           <i className="ti ti-trash" />
+        </button>
+        <button
+          className={`${styles.favoriteBtn} ${favorite ? styles.favoriteBtnActive : ''}`}
+          onClick={handleFavorite}
+          title={favorite ? '즐겨찾기 해제' : '즐겨찾기 추가'}
+        >
+          <i className={`ti ${favorite ? 'ti-star-filled' : 'ti-star'}`} />
         </button>
         {book.coverImageUrl ? (
           <img src={book.coverImageUrl} alt={book.title} className={styles.coverImg} />
