@@ -98,15 +98,12 @@ function CommentForm({ bookId, onPosted }) {
     try {
       setSubmitting(true)
       setError(null)
-      const res = await fetch(`${COMMENTS_API}`, {
+      const res = await fetch(`${API}/${bookId}/comments`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' ,
           ...(token ? {Authorization: `Bearer ${token}`} : {}),
         },
         body: JSON.stringify({
-          book_id: bookId,           // ← Number() 제거, 받은 그대로 사용
-          author_id: user.userId,
-          nickname: user.nickname,
           content: trimmed,
           rating: rating > 0 ? rating : null,
         }),
@@ -163,7 +160,7 @@ function CommentForm({ bookId, onPosted }) {
 // ─────────────────────────────────────────────
 // 댓글 단건 아이템 (PATCH & DELETE /comments/{id})
 // ─────────────────────────────────────────────
-function CommentItem({ comment, onDeleted, onUpdated }) {
+function CommentItem({ comment, onDeleted, onUpdated , anonLabel}) {
   const { user, token } = useAuth()
   const [editing, setEditing] = useState(false)
   const [editContent, setEditContent] = useState(comment.content)
@@ -183,7 +180,7 @@ function CommentItem({ comment, onDeleted, onUpdated }) {
         },
         body: JSON.stringify({
           content: trimmed,
-          rating: editRating > 0 ? editRating : null,
+          rating: editRating ,
         }),
       })
       if (!res.ok) throw new Error()
@@ -202,7 +199,7 @@ function CommentItem({ comment, onDeleted, onUpdated }) {
     onDeleted?.()
   }
 
-  const displayName = comment.nickname ?? '익명 사용자'
+  const displayName = `사용자${anonLabel}` // 익명 comment
   const createdAt = formatDateTime(comment.created_at)
 
   return (
@@ -228,7 +225,7 @@ function CommentItem({ comment, onDeleted, onUpdated }) {
         </div>
 
         {/* UX 권한 검증: 내가 쓴 댓글(author_id와 내 고유 id 일치)일 때만 수정/삭제 버튼 노출 */}
-        {comment.author_id === user?.userId && (
+        {comment.userId === user?.userId && (
           <div style={s.commentActions}>
             <button style={s.commentActionBtn} onClick={() => { setEditing(true); setEditContent(comment.content); setEditRating(comment.rating ?? 0) }}>
               <i className="ti ti-edit" style={{ fontSize: 13 }} />
@@ -384,7 +381,7 @@ export default function BookDetail({ id, onBack, onEdit, onEditCover, onDeleted 
   const loadComments = useCallback(async () => {
     try {
       setCommentsLoading(true)
-      const res = await fetch(`${COMMENTS_API}?book_id=${id}`)
+      const res = await fetch(`${API}/${id}/comments`)
       if (!res.ok) return
       const data = await res.json()
       setComments(Array.isArray(data) ? data : (data.content ?? []))
@@ -406,6 +403,16 @@ export default function BookDetail({ id, onBack, onEdit, onEditCover, onDeleted 
   }, [favorite, id])
 
   const coverColor = useMemo(() => getCoverColor(book?.genre), [book?.genre])
+  const userLabelMap = useMemo(() => {
+  const map = new Map()
+  let counter = 1
+    comments.forEach((c) => {
+      if (!map.has(c.userId)) {
+        map.set(c.userId, counter++)
+      }
+    })
+    return map
+  }, [comments])
 
   const handleDelete = async () => {
     await fetch(`${API}/${id}`, { method: 'DELETE' })
@@ -565,6 +572,7 @@ export default function BookDetail({ id, onBack, onEdit, onEditCover, onDeleted 
                 <CommentItem
                   key={c.id}
                   comment={c}
+                  anonLabel={userLabelMap.get(c.userId)} 
                   onDeleted={loadComments}
                   onUpdated={loadComments}
                 />
