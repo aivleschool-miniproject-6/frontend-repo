@@ -16,6 +16,14 @@ function toTime(value) {
   return Number.isNaN(time) ? 0 : time
 }
 
+function readNumberParam(searchParams, key, fallback, { min = 0, max = Number.POSITIVE_INFINITY } = {}) {
+  const raw = searchParams.get(key)
+  if (raw == null || raw === '') return fallback
+  const value = Number(raw)
+  if (!Number.isFinite(value)) return fallback
+  return Math.min(max, Math.max(min, value))
+}
+
 function readFavoriteIds(userId) {
   const prefix = `bookFavorite:${userId ?? 'guest'}:`
   const ids = new Set()
@@ -46,9 +54,9 @@ export default function BookListPage({ onClickNew, onClickBook }) {
     publisher: searchParams.get('publisher') || DEFAULT_ADVANCED_FILTERS.publisher,
     pubDateFrom: searchParams.get('pubDateFrom') || DEFAULT_ADVANCED_FILTERS.pubDateFrom,
     pubDateTo: searchParams.get('pubDateTo') || DEFAULT_ADVANCED_FILTERS.pubDateTo,
-    priceMin: Number(searchParams.get('priceMin') ?? DEFAULT_ADVANCED_FILTERS.priceMin),
-    priceMax: Number(searchParams.get('priceMax') ?? DEFAULT_ADVANCED_FILTERS.priceMax),
-    minRating: Number(searchParams.get('minRating') ?? DEFAULT_ADVANCED_FILTERS.minRating),
+    priceMin: readNumberParam(searchParams, 'priceMin', DEFAULT_ADVANCED_FILTERS.priceMin, { min: 0 }),
+    priceMax: readNumberParam(searchParams, 'priceMax', DEFAULT_ADVANCED_FILTERS.priceMax, { min: 0, max: PRICE_MAX }),
+    minRating: readNumberParam(searchParams, 'minRating', DEFAULT_ADVANCED_FILTERS.minRating, { min: 0, max: 5 }),
   }))
 
   useEffect(() => {
@@ -57,9 +65,9 @@ export default function BookListPage({ onClickNew, onClickBook }) {
       publisher: searchParams.get('publisher') || DEFAULT_ADVANCED_FILTERS.publisher,
       pubDateFrom: searchParams.get('pubDateFrom') || DEFAULT_ADVANCED_FILTERS.pubDateFrom,
       pubDateTo: searchParams.get('pubDateTo') || DEFAULT_ADVANCED_FILTERS.pubDateTo,
-      priceMin: Number(searchParams.get('priceMin') ?? DEFAULT_ADVANCED_FILTERS.priceMin),
-      priceMax: Number(searchParams.get('priceMax') ?? DEFAULT_ADVANCED_FILTERS.priceMax),
-      minRating: Number(searchParams.get('minRating') ?? DEFAULT_ADVANCED_FILTERS.minRating),
+      priceMin: readNumberParam(searchParams, 'priceMin', DEFAULT_ADVANCED_FILTERS.priceMin, { min: 0 }),
+      priceMax: readNumberParam(searchParams, 'priceMax', DEFAULT_ADVANCED_FILTERS.priceMax, { min: 0, max: PRICE_MAX }),
+      minRating: readNumberParam(searchParams, 'minRating', DEFAULT_ADVANCED_FILTERS.minRating, { min: 0, max: 5 }),
     })
     setAdvancedOpen(
       ['publisher', 'pubDateFrom', 'pubDateTo', 'priceMin', 'priceMax', 'minRating'].some((k) => searchParams.has(k))
