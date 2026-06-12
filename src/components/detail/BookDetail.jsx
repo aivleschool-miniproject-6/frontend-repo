@@ -341,13 +341,14 @@ const s = {
 // 메인 컴포넌트
 // ─────────────────────────────────────────────
 export default function BookDetail({ id, onBack, onEdit, onEditCover, onDeleted }) {
-  const { token } = useAuth()
+  const { token, user } = useAuth()
+  const favKey = `bookFavorite:${user?.userId ?? 'guest'}:${id}`
   const navigate = useNavigate()
   const [book, setBook] = useState(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
   const [showDeleteModal, setShowDeleteModal] = useState(false)
-  const [favorite, setFavorite] = useState(() => localStorage.getItem(`bookFavorite:${id}`) === 'true')
+  const [favorite, setFavorite] = useState(() => localStorage.getItem(favKey) === 'true')
   const [views, setViews] = useState(0)
 
   const [comments, setComments] = useState([])
@@ -395,13 +396,13 @@ export default function BookDetail({ id, onBack, onEdit, onEditCover, onDeleted 
   useEffect(() => { loadComments() }, [loadComments])
 
   useEffect(() => {
-    setFavorite(localStorage.getItem(`bookFavorite:${id}`) === 'true')
-  }, [id])
+    setFavorite(localStorage.getItem(favKey) === 'true')
+  }, [favKey])
 
   useEffect(() => {
-    localStorage.setItem(`bookFavorite:${id}`, String(favorite))
+    localStorage.setItem(favKey, String(favorite))
     window.dispatchEvent(new Event('bookFavoriteChange'))
-  }, [favorite, id])
+  }, [favorite, favKey])
 
   const coverColor = useMemo(() => getCoverColor(book?.genre), [book?.genre])
   const userLabelMap = useMemo(() => {
