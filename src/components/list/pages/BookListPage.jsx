@@ -1,8 +1,10 @@
 ﻿import { useEffect, useMemo, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
+import { useAuth } from '../../../context/AuthContext'
 import Sidebar from '../components/Sidebar'
 import BookCard from '../components/BookCard'
 import BookListItem from '../components/BookListItem'
+import AdvancedSearchPanel, { DEFAULT_ADVANCED_FILTERS, PRICE_MAX } from '../../common/AdvancedSearchPanel'
 import styles from './BookListPage.module.css'
 
 const API = `${import.meta.env.VITE_API_BASE_URL}/books`
@@ -14,12 +16,21 @@ function toTime(value) {
   return Number.isNaN(time) ? 0 : time
 }
 
-function readFavoriteIds() {
+function readNumberParam(searchParams, key, fallback, { min = 0, max = Number.POSITIVE_INFINITY } = {}) {
+  const raw = searchParams.get(key)
+  if (raw == null || raw === '') return fallback
+  const value = Number(raw)
+  if (!Number.isFinite(value)) return fallback
+  return Math.min(max, Math.max(min, value))
+}
+
+function readFavoriteIds(userId) {
+  const prefix = `bookFavorite:${userId ?? 'guest'}:`
   const ids = new Set()
   for (let i = 0; i < localStorage.length; i += 1) {
     const key = localStorage.key(i)
-    if (key?.startsWith('bookFavorite:') && localStorage.getItem(key) === 'true') {
-      ids.add(key.replace('bookFavorite:', ''))
+    if (key?.startsWith(prefix) && localStorage.getItem(key) === 'true') {
+      ids.add(key.replace(prefix, ''))
     }
   }
   return ids
@@ -27,18 +38,40 @@ function readFavoriteIds() {
 
 export default function BookListPage({ onClickNew, onClickBook }) {
   const [searchParams] = useSearchParams()
+  const { user, token } = useAuth()
   const [books, setBooks] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
   const [genre, setGenre] = useState(ALL)
   const [query, setQuery] = useState(searchParams.get('search') || '')
   const [view, setView] = useState('grid')
-  const [favoriteIds, setFavoriteIds] = useState(() => readFavoriteIds())
+  const [favoriteIds, setFavoriteIds] = useState(() => readFavoriteIds(user?.userId))
   const [sortBy, setSortBy] = useState('register')
+  const [advancedOpen, setAdvancedOpen] = useState(() =>
+    ['publisher', 'pubDateFrom', 'pubDateTo', 'priceMin', 'priceMax', 'minRating'].some((k) => searchParams.has(k))
+  )
+  const [advFilters, setAdvFilters] = useState(() => ({
+    publisher: searchParams.get('publisher') || DEFAULT_ADVANCED_FILTERS.publisher,
+    pubDateFrom: searchParams.get('pubDateFrom') || DEFAULT_ADVANCED_FILTERS.pubDateFrom,
+    pubDateTo: searchParams.get('pubDateTo') || DEFAULT_ADVANCED_FILTERS.pubDateTo,
+    priceMin: readNumberParam(searchParams, 'priceMin', DEFAULT_ADVANCED_FILTERS.priceMin, { min: 0 }),
+    priceMax: readNumberParam(searchParams, 'priceMax', DEFAULT_ADVANCED_FILTERS.priceMax, { min: 0 }),
+    minRating: readNumberParam(searchParams, 'minRating', DEFAULT_ADVANCED_FILTERS.minRating, { min: 0, max: 5 }),
+  }))
 
-  // ✅ 추가: SearchBar에서 URL 변경 시 query 동기화
   useEffect(() => {
     setQuery(searchParams.get('search') || '')
+    setAdvFilters({
+      publisher: searchParams.get('publisher') || DEFAULT_ADVANCED_FILTERS.publisher,
+      pubDateFrom: searchParams.get('pubDateFrom') || DEFAULT_ADVANCED_FILTERS.pubDateFrom,
+      pubDateTo: searchParams.get('pubDateTo') || DEFAULT_ADVANCED_FILTERS.pubDateTo,
+      priceMin: readNumberParam(searchParams, 'priceMin', DEFAULT_ADVANCED_FILTERS.priceMin, { min: 0 }),
+      priceMax: readNumberParam(searchParams, 'priceMax', DEFAULT_ADVANCED_FILTERS.priceMax, { min: 0 }),
+      minRating: readNumberParam(searchParams, 'minRating', DEFAULT_ADVANCED_FILTERS.minRating, { min: 0, max: 5 }),
+    })
+    setAdvancedOpen(
+      ['publisher', 'pubDateFrom', 'pubDateTo', 'priceMin', 'priceMax', 'minRating'].some((k) => searchParams.has(k))
+    )
   }, [searchParams])
 
   useEffect(() => {
@@ -58,8 +91,9 @@ export default function BookListPage({ onClickNew, onClickBook }) {
     load()
   }, [])
 
+
   useEffect(() => {
-    const refresh = () => setFavoriteIds(readFavoriteIds())
+    const refresh = () => setFavoriteIds(readFavoriteIds(user?.userId))
     window.addEventListener('focus', refresh)
     window.addEventListener('storage', refresh)
     window.addEventListener('bookFavoriteChange', refresh)
@@ -72,14 +106,34 @@ export default function BookListPage({ onClickNew, onClickBook }) {
 
   const handleDelete = async (id) => {
     if (!window.confirm('정말 삭제할까요?')) return
-    await fetch(`${API}/${id}`, { method: 'DELETE' })
-    localStorage.removeItem(`bookFavorite:${id}`)
-    setFavoriteIds(readFavoriteIds())
+    const res = await fetch(`${API}/${id}`, {
+      method: 'DELETE',
+      headers: token ? { Authorization: `Bearer ${token}` } : {},
+    })
+    if (!res.ok) {
+      alert('삭제에 실패했습니다.')
+      return
+    }
+    localStorage.removeItem(`bookFavorite:${user?.userId ?? 'guest'}:${id}`)
+    setFavoriteIds(readFavoriteIds(user?.userId))
     setBooks((prev) => prev.filter((b) => b.id !== id))
   }
 
+  const hasAdvanced = useMemo(() => {
+    const d = DEFAULT_ADVANCED_FILTERS
+    return (
+      advFilters.publisher !== d.publisher ||
+      advFilters.pubDateFrom !== d.pubDateFrom ||
+      advFilters.pubDateTo !== d.pubDateTo ||
+      advFilters.priceMin !== d.priceMin ||
+      advFilters.priceMax !== d.priceMax ||
+      advFilters.minRating !== d.minRating
+    )
+  }, [advFilters])
+
   const filtered = useMemo(() => {
     const lowerQuery = query.toLowerCase()
+    const lowerPublisher = advFilters.publisher.toLowerCase()
     return books.filter((book) => {
       const genreOk =
         genre === ALL || (genre === FAVORITES ? favoriteIds.has(String(book.id)) : book.genre === genre)
@@ -87,9 +141,21 @@ export default function BookListPage({ onClickNew, onClickBook }) {
         !query ||
         book.title?.toLowerCase().includes(lowerQuery) ||
         book.author?.toLowerCase().includes(lowerQuery)
-      return genreOk && queryOk
+      const publisherOk =
+        !advFilters.publisher || book.publisher?.toLowerCase().includes(lowerPublisher)
+      const priceOk =
+        (book.price == null || book.price >= advFilters.priceMin) &&
+        (book.price == null || advFilters.priceMax === PRICE_MAX || book.price <= advFilters.priceMax)
+      const pubDateFromOk =
+        !advFilters.pubDateFrom || (book.pubDate && book.pubDate >= advFilters.pubDateFrom)
+      const pubDateToOk =
+        !advFilters.pubDateTo || (book.pubDate && book.pubDate <= advFilters.pubDateTo)
+      const ratingOk =
+        advFilters.minRating === 0 ||
+        (book.averageRating ?? 0) >= advFilters.minRating
+      return genreOk && queryOk && publisherOk && priceOk && pubDateFromOk && pubDateToOk && ratingOk
     })
-  }, [books, genre, favoriteIds, query])
+  }, [books, genre, favoriteIds, query, advFilters])
 
   const sorted = useMemo(() => {
     const arr = [...filtered]
@@ -114,8 +180,24 @@ export default function BookListPage({ onClickNew, onClickBook }) {
               value={query}
               onChange={(e) => setQuery(e.target.value)}
             />
+            <button
+              className={`${styles.advBtn} ${advancedOpen ? styles.advBtnActive : ''} ${hasAdvanced ? styles.advBtnDot : ''}`}
+              onClick={() => setAdvancedOpen((v) => !v)}
+              title="상세검색"
+              type="button"
+            >
+              <i className="ti ti-adjustments-horizontal" />
+            </button>
           </div>
         </div>
+
+        {advancedOpen && (
+          <AdvancedSearchPanel
+            filters={advFilters}
+            onChange={setAdvFilters}
+            onReset={() => setAdvFilters(DEFAULT_ADVANCED_FILTERS)}
+          />
+        )}
 
         <div className={styles.subbar}>
           <div className={styles.subLeft}>

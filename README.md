@@ -34,9 +34,6 @@ graph TD
 - 1회 생성에 최대 3가지 표지 샘플 제공
 - 도서 등록 이후에도 언제든지 AI 표지 수정 가능
   
-### 🔍 속성 별 상세 검색 기능
-- 제목, 작가, 장르, 출판사, 가격대 별로 조정하여 상세 검색 가능
-  
 ### ✅ 카테고리 필터링 기능
 - 도서 목록 화면에서 상세 검색 기능 없이도 장르 별 필터링 편의성 제공
 
@@ -131,13 +128,13 @@ $ npm run dev
 
 |메인 화면   |도서 목록   |
 |--------|--------|
-|<img src="https://github.com/user-attachments/assets/1a76f89e-b3c5-41f8-ae42-61477d71240d">        |<img src="https://github.com/user-attachments/assets/7fd92d5e-ecff-4f26-9e3a-12e6929f513c">        |
+|<img src="https://github.com/user-attachments/assets/1a76f89e-b3c5-41f8-ae42-61477d71240d">        |<img width="1895" height="908" alt="image" src="https://github.com/user-attachments/assets/b334a398-0247-411b-9d68-c69d7ff44bc5" />     |
 |도서 검색 기능과 도서 랭킹 제공        |사이드바에서 장르별 모아보기 기능        |
 |신규 도서 등록|도서 표지 생성|
 |<img src="https://github.com/user-attachments/assets/7ed3444e-996e-4ec5-8382-4563cf8dcd52">        |<img src="https://github.com/user-attachments/assets/0ee21aeb-7347-4635-9ddb-c01a070ca8ca" />        |
-|제목, 저자, 내용 등 정보 입력        |태그를 선택하여 원하는 AI 표지 생성        |
+|제목, 저자, 내용 등 정보 입력        |태그와 프롬프트를 입력하여 원하는 AI 표지 생성        |
 |도서 상세 정보|AI 표지 수정|
-|<img src="https://github.com/user-attachments/assets/cdb48da5-fde7-403f-b94d-5a024bb54017">        |<img src="https://github.com/user-attachments/assets/e00a4144-158c-4766-9e5c-4ffc88a01ece" />        |
+|<img src="https://github.com/user-attachments/assets/cdb48da5-fde7-403f-b94d-5a024bb54017">        |<img src="https://github.com/user-attachments/assets/96d6a1dd-b497-4d69-b95d-184b4b1c12a2">        |
 |등록한 도서 정보 내용 출력        |표지 수정도 생성 시와 동일        |
 
 <br>
@@ -152,3 +149,4 @@ $ npm run dev
 |OpenAI    |박태정     |
 |스타일링, QA  |이채은, 김다진|
 |발표, 문서    |김다애     |
+

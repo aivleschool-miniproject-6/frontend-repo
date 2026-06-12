@@ -4,10 +4,9 @@ import {
   BACKGROUND_PRESETS,
   LIGHTING_PRESETS,
   TYPOGRAPHY_PRESETS,
-  buildStructuredPrompt,
   compressImageDataUrl,
-  generateBookCover,
 } from '../../../util/bookCoverService'
+import { useAuth } from '../../../context/AuthContext'
 
 const API = `${import.meta.env.VITE_API_BASE_URL}/books`
 
@@ -26,7 +25,7 @@ const s = {
   },
   inner: { flex: 1, overflow: 'auto', padding: 24 },
   wrap: { maxWidth: 680, margin: '0 auto' },
-  pageTitle: { fontSize: 18, fontWeight: 500, color: '#1a1a18', marginBottom: 6 },
+  pageTitle: { fontSize: 18, fontWeight: 500, color: '#1a1a18', margin: 6 },
   pageSub: { fontSize: 13, color: '#6b6b67', marginBottom: 20 },
   card: {
     background: '#fff', border: '0.5px solid rgba(0,0,0,0.12)',
@@ -39,22 +38,22 @@ const s = {
   formGroup: { marginBottom: 14 },
   label: {
     fontSize: 12, color: '#6b6b67',
-    display: 'block', marginBottom: 5,
+    display: 'block', marginBottom: 5 
   },
   req: { color: '#e74c3c' },
   input: (err) => ({
-    width: '100%', padding: '8px 12px',
+    width: '100%', padding: '8px 12px ', boxSizing:'border-box',
     border: `0.5px solid ${err ? '#e74c3c' : 'rgba(0,0,0,0.22)'}`,
     borderRadius: 8, fontSize: 13, background: '#fff', color: '#1a1a18', outline: 'none',
   }),
   textarea: (err) => ({
-    width: '100%', padding: '8px 12px',
+    width: '100%', padding: '8px 12px',  boxSizing:'border-box',
     border: `0.5px solid ${err ? '#e74c3c' : 'rgba(0,0,0,0.22)'}`,
     borderRadius: 8, fontSize: 13, background: '#fff', color: '#1a1a18',
     minHeight: 110, resize: 'vertical', lineHeight: 1.6, outline: 'none',
   }),
   select: (err) => ({
-    width: '100%', padding: '8px 12px',
+    width: '100%', padding: '8px 12px ',
     border: `0.5px solid ${err ? '#e74c3c' : 'rgba(0,0,0,0.22)'}`,
     borderRadius: 8, fontSize: 13, background: '#fff', color: '#1a1a18', outline: 'none',
   }),
@@ -80,6 +79,7 @@ const s = {
 
 export default function BookFormPage({ mode, id, onBack, onSaved }) {
   const isEdit = mode === 'edit'
+  const { user, token } = useAuth()
 
   // 하나의 숫자로 묶어 다루기 
   const [form, setForm] = useState({
@@ -184,34 +184,41 @@ export default function BookFormPage({ mode, id, onBack, onSaved }) {
       alert('어떤 스타일의 표지를 원하시는지 프롬프트를 작성해주세요!')
       return
     }
-    const apiKey = import.meta.env.VITE_OPENAI_API_KEY
-    if (!apiKey) {
-      alert('.env 파일에 VITE_OPENAI_API_KEY를 설정해주세요.')
-      return
-    }
     try {
       setIsGenerating(true)
       setSelectedImageIndex(null)
       setGeneratedImages([null, null, null])
-      const combinedInfo = {
-        title: form.title,
-        author: form.author,
-        content: `[Book Story]: ${form.content} / [User Design Request]: ${aiPrompt}`,
+
+      const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/books/cover/generate`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+        body: JSON.stringify({
+          model: apiConfig.model,
+          quality: apiConfig.quality,
+          title: form.title,
+          genre: form.genre,
+          author: form.author,
+          content: form.content,
+          prompt: aiPrompt,
+          style: aiOptions.style,
+          background: aiOptions.background,
+          lighting: aiOptions.lighting,
+          typography: aiOptions.typography,
+        }),
+      })
+
+      if (!response.ok) {
+        const errBody = await response.text()
+        throw new Error(`이미지 생성 요청 실패 (Status: ${response.status}) - ${errBody}`)
       }
-      const finalPrompt = buildStructuredPrompt(combinedInfo, aiOptions)
-      
-      // 3. 사이즈는 1024x1536으로 무조건 고정
-      const fixedSize = '1024x1536';
-      
-      // 4. 동적 모델 전달
-      const newImages = await Promise.all([
-        generateBookCover(apiKey, finalPrompt, apiConfig.model, fixedSize),
-        generateBookCover(apiKey, finalPrompt, apiConfig.model, fixedSize),
-        generateBookCover(apiKey, finalPrompt, apiConfig.model, fixedSize),
-      ])
-      setGeneratedImages(newImages)
+
+      const data = await response.json()
+      setGeneratedImages(data.images)
     } catch (error) {
-      console.error(error)
+      console.error('이미지 생성 실패:', error)
       alert(`이미지 생성 중 오류가 발생했습니다: ${error.message}`)
       setGeneratedImages([null, null, null])
     } finally {
@@ -233,24 +240,25 @@ export default function BookFormPage({ mode, id, onBack, onSaved }) {
         price: form.price ? Number(form.price) : null,
         pages: form.pages ? Number(form.pages) : null,
         updatedAt: now,
-        ...(isEdit ? {} : { createdAt: now, coverImageUrl }),
+        ...(isEdit ? {} : { createdAt: now, coverImageUrl, authorId: user?.userId ?? null }),
       }
 
       /////fetch
+      const authHeader = token ? { Authorization: `Bearer ${token}` } : {}
       const res = isEdit
         ? await fetch(`${API}/${id}`, {
           method: 'PATCH',
-          headers: { 'Content-Type': 'application/json' },
+          headers: { 'Content-Type': 'application/json', ...authHeader },
           body: JSON.stringify(body),
         })
         : await fetch(API, {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: { 'Content-Type': 'application/json', ...authHeader },
           body: JSON.stringify(body),
         })
 
       if (!res.ok) {
-        alert('저장에 실패했습니다. json-server가 실행 중인지 확인하세요.')
+        alert('저장에 실패했습니다. 백엔드 서버가 실행 중인지 확인하세요.')
         return
       }
 
