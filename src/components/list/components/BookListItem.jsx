@@ -1,4 +1,5 @@
 import { getCoverColor, fmtDate } from './BookCard'
+import { useAuth } from '../../../context/AuthContext'
 
 const styles = {
   item: {
@@ -108,6 +109,7 @@ const styles = {
 
 export default function BookListItem({ book, rank, onClick, onDelete }) {
   const { bg, ic } = getCoverColor(book.genre)
+  const { user } = useAuth()
 
   return (
     <div style={styles.item} onClick={onClick}>
@@ -134,13 +136,15 @@ export default function BookListItem({ book, rank, onClick, onDelete }) {
       <div style={styles.right}>
         <div style={styles.price}>{book.price?.toLocaleString()}원</div>
         <div style={styles.date}>{book.pubDate}</div>
-        <button
-          style={styles.deleteBtn}
-          onClick={e => { e.stopPropagation(); onDelete && onDelete() }}
-          title="삭제"
-        >
-          <i className="ti ti-trash" />
-        </button>
+        {book.authorId === user?.userId && (
+          <button
+            style={styles.deleteBtn}
+            onClick={e => { e.stopPropagation(); onDelete && onDelete() }}
+            title="삭제"
+          >
+            <i className="ti ti-trash" />
+          </button>
+        )}
       </div>
     </div>
   )

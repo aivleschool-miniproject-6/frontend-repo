@@ -5,12 +5,13 @@ import { useAuth } from '../../../context/AuthContext'
 
 const API_BASE = import.meta.env.VITE_API_BASE_URL
 
-function readFavoriteBookIds() {
+function readFavoriteBookIds(userId) {
+  const prefix = `bookFavorite:${userId ?? 'guest'}:`
   const ids = []
   for (let i = 0; i < localStorage.length; i++) {
     const key = localStorage.key(i)
-    if (key?.startsWith('bookFavorite:') && localStorage.getItem(key) === 'true') {
-      ids.push(key.replace('bookFavorite:', ''))
+    if (key?.startsWith(prefix) && localStorage.getItem(key) === 'true') {
+      ids.push(key.replace(prefix, ''))
     }
   }
   return ids
@@ -182,7 +183,7 @@ export default function MyPage() {
         const authHeader = { Authorization: `Bearer ${token}` }
 
         // 내 프로필 + 전체 책 목록 + 즐겨찾기 ID 병렬 조회
-        const favoriteIds = readFavoriteBookIds()
+        const favoriteIds = readFavoriteBookIds(user?.userId)
 
         const [profileRes, booksRes, followingsRes] = await Promise.all([
           fetch(`${API_BASE}/users/me`, { headers: authHeader }),

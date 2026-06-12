@@ -1,5 +1,6 @@
 ﻿import { useState } from 'react'
 import styles from './BookCard.module.css'
+import { useAuth } from '../../../context/AuthContext'
 
 const COVER_COLORS = {
   소설: { bg: '#E1F5EE', ic: '#0F6E56' },
@@ -22,15 +23,15 @@ export function fmtDate(dateStr) {
 
 export default function BookCard({ book, rank, onClick, onDelete, favoriteTop = false }) {
   const { bg, ic } = getCoverColor(book.genre)
-  const [favorite, setFavorite] = useState(
-    () => localStorage.getItem(`bookFavorite:${book.id}`) === 'true'
-  )
+  const { user } = useAuth()
+  const favKey = `bookFavorite:${user?.userId ?? 'guest'}:${book.id}`
+  const [favorite, setFavorite] = useState(() => localStorage.getItem(favKey) === 'true')
 
   const handleFavorite = (e) => {
     e.stopPropagation()
     const next = !favorite
     setFavorite(next)
-    localStorage.setItem(`bookFavorite:${book.id}`, String(next))
+    localStorage.setItem(favKey, String(next))
     window.dispatchEvent(new Event('bookFavoriteChange'))
   }
 
@@ -38,7 +39,7 @@ export default function BookCard({ book, rank, onClick, onDelete, favoriteTop = 
     <div className={styles.card} onClick={onClick}>
       <div className={styles.cover} style={{ background: bg }}>
         {rank && <span className={styles.rank}>{rank}</span>}
-        {!favoriteTop && (
+        {!favoriteTop && book.authorId === user?.userId && (
           <button
             className={styles.deleteBtn}
             onClick={(e) => { e.stopPropagation(); onDelete && onDelete() }}

@@ -1,5 +1,6 @@
 ﻿import { useEffect, useMemo, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
+import { useAuth } from '../../../context/AuthContext'
 import Sidebar from '../components/Sidebar'
 import BookCard from '../components/BookCard'
 import BookListItem from '../components/BookListItem'
@@ -16,12 +17,13 @@ function toTime(value) {
   return Number.isNaN(time) ? 0 : time
 }
 
-function readFavoriteIds() {
+function readFavoriteIds(userId) {
+  const prefix = `bookFavorite:${userId ?? 'guest'}:`
   const ids = new Set()
   for (let i = 0; i < localStorage.length; i += 1) {
     const key = localStorage.key(i)
-    if (key?.startsWith('bookFavorite:') && localStorage.getItem(key) === 'true') {
-      ids.add(key.replace('bookFavorite:', ''))
+    if (key?.startsWith(prefix) && localStorage.getItem(key) === 'true') {
+      ids.add(key.replace(prefix, ''))
     }
   }
   return ids
@@ -29,13 +31,14 @@ function readFavoriteIds() {
 
 export default function BookListPage({ onClickNew, onClickBook }) {
   const [searchParams] = useSearchParams()
+  const { user, token } = useAuth()
   const [books, setBooks] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
   const [genre, setGenre] = useState(ALL)
   const [query, setQuery] = useState(searchParams.get('search') || '')
   const [view, setView] = useState('grid')
-  const [favoriteIds, setFavoriteIds] = useState(() => readFavoriteIds())
+  const [favoriteIds, setFavoriteIds] = useState(() => readFavoriteIds(user?.userId))
   const [sortBy, setSortBy] = useState('register')
   const [advancedOpen, setAdvancedOpen] = useState(() =>
     ['publisher', 'pubDateFrom', 'pubDateTo', 'priceMin', 'priceMax', 'minRating'].some((k) => searchParams.has(k))
@@ -92,7 +95,7 @@ export default function BookListPage({ onClickNew, onClickBook }) {
   }, [])
 
   useEffect(() => {
-    const refresh = () => setFavoriteIds(readFavoriteIds())
+    const refresh = () => setFavoriteIds(readFavoriteIds(user?.userId))
     window.addEventListener('focus', refresh)
     window.addEventListener('storage', refresh)
     window.addEventListener('bookFavoriteChange', refresh)
@@ -105,9 +108,16 @@ export default function BookListPage({ onClickNew, onClickBook }) {
 
   const handleDelete = async (id) => {
     if (!window.confirm('정말 삭제할까요?')) return
-    await fetch(`${API}/${id}`, { method: 'DELETE' })
-    localStorage.removeItem(`bookFavorite:${id}`)
-    setFavoriteIds(readFavoriteIds())
+    const res = await fetch(`${API}/${id}`, {
+      method: 'DELETE',
+      headers: token ? { Authorization: `Bearer ${token}` } : {},
+    })
+    if (!res.ok) {
+      alert('삭제에 실패했습니다.')
+      return
+    }
+    localStorage.removeItem(`bookFavorite:${user?.userId ?? 'guest'}:${id}`)
+    setFavoriteIds(readFavoriteIds(user?.userId))
     setBooks((prev) => prev.filter((b) => b.id !== id))
   }
 
