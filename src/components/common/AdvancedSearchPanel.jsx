@@ -66,7 +66,7 @@ export default function AdvancedSearchPanel({ filters, onChange, onReset }) {
               value={filters.priceMax === PRICE_MAX ? '' : filters.priceMax}
               onChange={(e) => {
                 const v = e.target.value.replace(/[^0-9]/g, '').slice(0, 9)
-                set('priceMax', v === '' ? PRICE_MAX : Math.min(Number(v), PRICE_MAX))
+                set('priceMax', v === '' ? PRICE_MAX : Number(v))
               }}
             />
             <span className={styles.priceUnit}>원</span>
