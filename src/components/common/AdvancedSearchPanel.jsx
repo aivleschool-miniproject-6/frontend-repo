@@ -53,7 +53,7 @@ export default function AdvancedSearchPanel({ filters, onChange, onReset }) {
               placeholder="최소 금액"
               value={filters.priceMin === 0 ? '' : filters.priceMin}
               onChange={(e) => {
-                const v = e.target.value.replace(/[^0-9]/g, '')
+                const v = e.target.value.replace(/[^0-9]/g, '').slice(0, 9)
                 set('priceMin', v === '' ? 0 : Number(v))
               }}
             />
@@ -65,7 +65,7 @@ export default function AdvancedSearchPanel({ filters, onChange, onReset }) {
               placeholder="최대 금액"
               value={filters.priceMax === PRICE_MAX ? '' : filters.priceMax}
               onChange={(e) => {
-                const v = e.target.value.replace(/[^0-9]/g, '')
+                const v = e.target.value.replace(/[^0-9]/g, '').slice(0, 9)
                 set('priceMax', v === '' ? PRICE_MAX : Number(v))
               }}
             />

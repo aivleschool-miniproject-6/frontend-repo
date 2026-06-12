@@ -7,7 +7,6 @@ import AdvancedSearchPanel, { DEFAULT_ADVANCED_FILTERS, PRICE_MAX } from '../../
 import styles from './BookListPage.module.css'
 
 const API = `${import.meta.env.VITE_API_BASE_URL}/books`
-const COMMENTS_API = `${import.meta.env.VITE_API_BASE_URL}/comments`
 const ALL = 'ALL'
 const FAVORITES = 'FAVORITES'
 
@@ -48,11 +47,20 @@ export default function BookListPage({ onClickNew, onClickBook }) {
     priceMax: Number(searchParams.get('priceMax') ?? DEFAULT_ADVANCED_FILTERS.priceMax),
     minRating: Number(searchParams.get('minRating') ?? DEFAULT_ADVANCED_FILTERS.minRating),
   }))
-  const [ratingMap, setRatingMap] = useState({}) // bookId -> avgRating
 
-  // ✅ 추가: SearchBar에서 URL 변경 시 query 동기화
   useEffect(() => {
     setQuery(searchParams.get('search') || '')
+    setAdvFilters({
+      publisher: searchParams.get('publisher') || DEFAULT_ADVANCED_FILTERS.publisher,
+      pubDateFrom: searchParams.get('pubDateFrom') || DEFAULT_ADVANCED_FILTERS.pubDateFrom,
+      pubDateTo: searchParams.get('pubDateTo') || DEFAULT_ADVANCED_FILTERS.pubDateTo,
+      priceMin: Number(searchParams.get('priceMin') ?? DEFAULT_ADVANCED_FILTERS.priceMin),
+      priceMax: Number(searchParams.get('priceMax') ?? DEFAULT_ADVANCED_FILTERS.priceMax),
+      minRating: Number(searchParams.get('minRating') ?? DEFAULT_ADVANCED_FILTERS.minRating),
+    })
+    setAdvancedOpen(
+      ['publisher', 'pubDateFrom', 'pubDateTo', 'priceMin', 'priceMax', 'minRating'].some((k) => searchParams.has(k))
+    )
   }, [searchParams])
 
   useEffect(() => {
@@ -72,24 +80,6 @@ export default function BookListPage({ onClickNew, onClickBook }) {
     load()
   }, [])
 
-  useEffect(() => {
-    fetch(COMMENTS_API)
-      .then((r) => r.ok ? r.json() : [])
-      .then((comments) => {
-        const map = {}
-        comments.forEach((c) => {
-          if (!c.book_id || !c.rating || typeof c.rating !== 'number') return
-          const id = String(c.book_id)
-          if (!map[id]) map[id] = { sum: 0, count: 0 }
-          map[id].sum += c.rating
-          map[id].count += 1
-        })
-        const avg = {}
-        Object.entries(map).forEach(([id, { sum, count }]) => { avg[id] = sum / count })
-        setRatingMap(avg)
-      })
-      .catch((e) => console.error('평점 데이터 로드 실패:', e))
-  }, [])
 
   useEffect(() => {
     const refresh = () => setFavoriteIds(readFavoriteIds())
@@ -144,10 +134,10 @@ export default function BookListPage({ onClickNew, onClickBook }) {
         !advFilters.pubDateTo || (book.pubDate && book.pubDate <= advFilters.pubDateTo)
       const ratingOk =
         advFilters.minRating === 0 ||
-        (ratingMap[String(book.id)] ?? 0) >= advFilters.minRating
+        (book.averageRating ?? 0) >= advFilters.minRating
       return genreOk && queryOk && publisherOk && priceOk && pubDateFromOk && pubDateToOk && ratingOk
     })
-  }, [books, genre, favoriteIds, query, advFilters, ratingMap])
+  }, [books, genre, favoriteIds, query, advFilters])
 
   const sorted = useMemo(() => {
     const arr = [...filtered]
