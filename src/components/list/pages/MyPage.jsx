@@ -264,6 +264,20 @@ export default function MyPage() {
     )
   }
 
+  const handleDelete = async (id) => {
+    if (!window.confirm('정말 삭제할까요?')) return
+    const res = await fetch(`${API_BASE}/books/${id}`, {
+      method: 'DELETE',
+      headers: { Authorization: `Bearer ${token}` },
+    })
+    if (!res.ok) {
+      alert('삭제에 실패했습니다.')
+      return
+    }
+    localStorage.removeItem(`bookFavorite:${user?.userId ?? 'guest'}:${id}`)
+    setMyBooks((prev) => prev.filter((b) => b.id !== id))
+  }
+
   const displayBooks = activeTab === 'mybooks' ? myBooks : favorites
 
   return (
@@ -328,6 +342,7 @@ export default function MyPage() {
                 key={book.id}
                 book={book}
                 onClick={() => navigate(`/books/${book.id}`)}
+                onDelete={() => handleDelete(book.id)}
                 favoriteTop={activeTab === 'favorites'}
               />
             ))}
