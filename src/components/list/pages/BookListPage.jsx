@@ -55,7 +55,7 @@ export default function BookListPage({ onClickNew, onClickBook }) {
     pubDateFrom: searchParams.get('pubDateFrom') || DEFAULT_ADVANCED_FILTERS.pubDateFrom,
     pubDateTo: searchParams.get('pubDateTo') || DEFAULT_ADVANCED_FILTERS.pubDateTo,
     priceMin: readNumberParam(searchParams, 'priceMin', DEFAULT_ADVANCED_FILTERS.priceMin, { min: 0 }),
-    priceMax: readNumberParam(searchParams, 'priceMax', DEFAULT_ADVANCED_FILTERS.priceMax, { min: 0, max: PRICE_MAX }),
+    priceMax: readNumberParam(searchParams, 'priceMax', DEFAULT_ADVANCED_FILTERS.priceMax, { min: 0 }),
     minRating: readNumberParam(searchParams, 'minRating', DEFAULT_ADVANCED_FILTERS.minRating, { min: 0, max: 5 }),
   }))
 
@@ -66,7 +66,7 @@ export default function BookListPage({ onClickNew, onClickBook }) {
       pubDateFrom: searchParams.get('pubDateFrom') || DEFAULT_ADVANCED_FILTERS.pubDateFrom,
       pubDateTo: searchParams.get('pubDateTo') || DEFAULT_ADVANCED_FILTERS.pubDateTo,
       priceMin: readNumberParam(searchParams, 'priceMin', DEFAULT_ADVANCED_FILTERS.priceMin, { min: 0 }),
-      priceMax: readNumberParam(searchParams, 'priceMax', DEFAULT_ADVANCED_FILTERS.priceMax, { min: 0, max: PRICE_MAX }),
+      priceMax: readNumberParam(searchParams, 'priceMax', DEFAULT_ADVANCED_FILTERS.priceMax, { min: 0 }),
       minRating: readNumberParam(searchParams, 'minRating', DEFAULT_ADVANCED_FILTERS.minRating, { min: 0, max: 5 }),
     })
     setAdvancedOpen(

@@ -24,7 +24,7 @@ const SearchBar = () => {
     if (advFilters.pubDateFrom) params.set('pubDateFrom', advFilters.pubDateFrom);
     if (advFilters.pubDateTo) params.set('pubDateTo', advFilters.pubDateTo);
     if (advFilters.priceMin > 0) params.set('priceMin', String(advFilters.priceMin));
-    if (advFilters.priceMax < PRICE_MAX) params.set('priceMax', String(advFilters.priceMax));
+    if (advFilters.priceMax !== PRICE_MAX) params.set('priceMax', String(advFilters.priceMax));
     if (advFilters.minRating > 0) params.set('minRating', String(advFilters.minRating));
     navigate(`/books?${params.toString()}`);
   };
