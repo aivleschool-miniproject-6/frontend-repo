@@ -1,0 +1,23 @@
+version: 0.2
+
+phases:
+  install:
+    runtime-versions:
+      nodejs: 20
+    commands:
+      - echo "frontend install started"
+      - npm install
+
+  build:
+    commands:
+      - echo "frontend build started"
+      - npm run build
+
+  post_build:
+    commands:
+      - echo "frontend build completed"
+
+artifacts:
+  files:
+    - '**/*'
+  base-directory: dist
