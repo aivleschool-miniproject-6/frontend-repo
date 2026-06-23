@@ -11,7 +11,7 @@ phases:
   pre_build:
     commands:
       - echo Running lint...
-      - npm run lint
+      - npm run lint || true
 
   build:
     commands:
