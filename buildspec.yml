@@ -23,9 +23,10 @@ phases:
       - echo Build completed on `date`
 
 artifacts:
-  base-directory: dist
   files:
-    - "**/*"
+    - "dist/**/*"
+    - "appspec.yml"
+    - "deploy-scripts/**/*"
 
 cache:
   paths:

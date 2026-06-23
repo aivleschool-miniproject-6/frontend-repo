@@ -1,0 +1,24 @@
+version: 0.0
+os: linux
+files:
+  - source: dist
+    destination: /var/www/book-management-front
+    overwrite: yes
+permissions:
+  - object: /var/www/book-management-front
+    owner: nginx
+    group: nginx
+    mode: 755
+    type:
+      - directory
+  - object: /var/www/book-management-front
+    owner: nginx
+    group: nginx
+    mode: 644
+    type:
+      - file
+hooks:
+  ApplicationStart:
+    - location: deploy-scripts/application-start-hook.sh
+      timeout: 300
+      runas: root
