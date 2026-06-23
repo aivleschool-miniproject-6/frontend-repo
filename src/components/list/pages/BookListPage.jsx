@@ -4,7 +4,8 @@ import { useAuth } from '../../../context/AuthContext'
 import Sidebar from '../components/Sidebar'
 import BookCard from '../components/BookCard'
 import BookListItem from '../components/BookListItem'
-import AdvancedSearchPanel, { DEFAULT_ADVANCED_FILTERS, PRICE_MAX } from '../../common/AdvancedSearchPanel'
+import AdvancedSearchPanel from '../../common/AdvancedSearchPanel'
+import { DEFAULT_ADVANCED_FILTERS, PRICE_MAX } from '../../common/filterConstants'
 import styles from './BookListPage.module.css'
 
 const API = `${import.meta.env.VITE_API_BASE_URL}/books`
@@ -36,7 +37,7 @@ function readFavoriteIds(userId) {
   return ids
 }
 
-export default function BookListPage({ onClickNew, onClickBook }) {
+export default function BookListPage({ onClickBook }) {
   const [searchParams] = useSearchParams()
   const { user, token } = useAuth()
   const [books, setBooks] = useState([])
@@ -59,6 +60,7 @@ export default function BookListPage({ onClickNew, onClickBook }) {
     minRating: readNumberParam(searchParams, 'minRating', DEFAULT_ADVANCED_FILTERS.minRating, { min: 0, max: 5 }),
   }))
 
+  /* eslint-disable react-hooks/set-state-in-effect */
   useEffect(() => {
     setQuery(searchParams.get('search') || '')
     setAdvFilters({
@@ -73,6 +75,7 @@ export default function BookListPage({ onClickNew, onClickBook }) {
       ['publisher', 'pubDateFrom', 'pubDateTo', 'priceMin', 'priceMax', 'minRating'].some((k) => searchParams.has(k))
     )
   }, [searchParams])
+  /* eslint-enable react-hooks/set-state-in-effect */
 
   useEffect(() => {
     const load = async () => {

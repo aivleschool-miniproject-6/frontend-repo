@@ -101,6 +101,7 @@ export default function AuthorPage() {
     }
   }, [authorId, isLoggedIn, isMyPage, token])
 
+  // eslint-disable-next-line react-hooks/set-state-in-effect
   useEffect(() => { loadData() }, [loadData])
 
   const handleFollow = async () => {

@@ -1,4 +1,4 @@
-import { getCoverColor, fmtDate } from './BookCard'
+import { getCoverColor, fmtDate } from './bookCardUtils'
 import { useAuth } from '../../../context/AuthContext'
 
 const styles = {

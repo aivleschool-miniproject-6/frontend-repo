@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { fmtDate, getCoverColor } from '../list/components/BookCard'
+import { fmtDate, getCoverColor } from '../list/components/bookCardUtils'
 import {useAuth} from '../../context/AuthContext'
 
 const API = `${import.meta.env.VITE_API_BASE_URL}/books`
@@ -87,7 +87,7 @@ function AverageRating({ comments }) {
 // 댓글 작성 폼 (POST /books/{bookId}/comments)
 // ─────────────────────────────────────────────
 function CommentForm({ bookId, onPosted }) {
-  const { user, token, isLoggedIn } = useAuth()
+  const { token, isLoggedIn } = useAuth()
   const [content, setContent] = useState('')
   const [rating, setRating] = useState(0)
   const [submitting, setSubmitting] = useState(false)
@@ -388,16 +388,20 @@ export default function BookDetail({ id, onBack, onEdit, onEditCover, onDeleted 
       const data = await res.json()
       setComments(Array.isArray(data) ? data : (data.content ?? []))
     } catch {
+      // fetch failed silently
     } finally {
       setCommentsLoading(false)
     }
   }, [id])
 
+  // eslint-disable-next-line react-hooks/set-state-in-effect
   useEffect(() => { loadComments() }, [loadComments])
 
+  /* eslint-disable react-hooks/set-state-in-effect */
   useEffect(() => {
     setFavorite(localStorage.getItem(favKey) === 'true')
   }, [favKey])
+  /* eslint-enable react-hooks/set-state-in-effect */
 
   useEffect(() => {
     localStorage.setItem(favKey, String(favorite))

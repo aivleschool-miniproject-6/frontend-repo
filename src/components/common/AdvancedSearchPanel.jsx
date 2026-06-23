@@ -1,6 +1,5 @@
 import styles from './AdvancedSearchPanel.module.css'
-
-export const PRICE_MAX = 100000
+import { PRICE_MAX } from './filterConstants'
 
 export default function AdvancedSearchPanel({ filters, onChange, onReset }) {
   const set = (key, value) => onChange({ ...filters, [key]: value })
@@ -103,11 +102,3 @@ export default function AdvancedSearchPanel({ filters, onChange, onReset }) {
   )
 }
 
-export const DEFAULT_ADVANCED_FILTERS = {
-  publisher: '',
-  pubDateFrom: '',
-  pubDateTo: '',
-  priceMin: 0,
-  priceMax: PRICE_MAX,
-  minRating: 0,
-}
