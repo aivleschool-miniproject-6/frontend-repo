@@ -5,17 +5,17 @@ phases:
     runtime-versions:
       nodejs: 20
     commands:
-      - echo "frontend install started"
+      - echo "frontend install started!"
       - npm install
 
   build:
     commands:
-      - echo "frontend build started"
+      - echo "frontend build started!"
       - npm run build
 
   post_build:
     commands:
-      - echo "frontend build completed"
+      - echo "frontend build completed!"
 
 artifacts:
   files:
