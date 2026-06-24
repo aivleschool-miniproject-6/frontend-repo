@@ -1,51 +1,10 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import styles from './main.module.css';
 
-const RatingRankingSection = ({ onBookClick }) => {
-  const [books, setBooks] = useState([]);
+const RatingRankingSection = ({ books = [], isLoading, onBookClick }) => {
   const [currentIndex, setCurrentIndex] = useState(0);
-  const [isLoading, setIsLoading] = useState(true);
 
   const itemsPerPage = 4;
-
-  useEffect(() => {
-    const fetchRatingRanking = async () => {
-      try {
-        const [booksRes, commentsRes] = await Promise.all([
-          fetch(`${import.meta.env.VITE_API_BASE_URL}/books`),
-          fetch(`${import.meta.env.VITE_API_BASE_URL}/comments`),
-        ]);
-        const booksData = await booksRes.json();
-        const commentsData = await commentsRes.json();
-
-        const ratingMap = {};
-        commentsData.forEach((c) => {
-          const bookId = String(c.booksId ?? c.book_id);
-          if (!bookId || bookId === 'null' || !c.rating || c.rating <= 0) return;
-          if (!ratingMap[bookId]) ratingMap[bookId] = { sum: 0, count: 0 };
-          ratingMap[bookId].sum += c.rating;
-          ratingMap[bookId].count += 1;
-        });
-
-        const ranked = booksData
-          .filter((book) => ratingMap[String(book.id)])
-          .map((book) => {
-            const r = ratingMap[String(book.id)];
-            return { ...book, avgRating: r.sum / r.count, ratingCount: r.count };
-          })
-          .sort((a, b) => b.avgRating - a.avgRating || b.ratingCount - a.ratingCount)
-          .slice(0, 60);
-
-        setBooks(ranked);
-        setIsLoading(false);
-      } catch (error) {
-        console.error('별점 랭킹 데이터를 불러오는 중 오류가 발생했습니다:', error);
-        setIsLoading(false);
-      }
-    };
-
-    fetchRatingRanking();
-  }, []);
 
   if (isLoading) {
     return <div className={styles.bookSection}>별점 랭킹을 불러오는 중입니다...</div>;
@@ -117,11 +76,13 @@ const RatingRankingSection = ({ onBookClick }) => {
                 <div className={styles.cardInfo}>
                   <h4>{book.title}</h4>
                   <p>{book.author}</p>
-                  <div className={styles.ratingBadge}>
-                    <span className={styles.starIcon}>&#9733;</span>
-                    <span>{book.avgRating.toFixed(1)}</span>
-                    <span className={styles.ratingCount}>({book.ratingCount})</span>
-                  </div>
+                  {book.averageRating > 0 && (
+                    <div className={styles.ratingBadge}>
+                      <span className={styles.starIcon}>&#9733;</span>
+                      <span>{book.averageRating.toFixed(1)}</span>
+                      <span className={styles.ratingCount}>({book.ratingCount})</span>
+                    </div>
+                  )}
                 </div>
               </div>
             ))}
