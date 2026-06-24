@@ -2,7 +2,6 @@ import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import SearchBar from './SearchBar'
 import BookSection from './BookSection'
-import RatingRankingSection from './RatingRankingSection'
 
 const Main = () => {
   const navigate = useNavigate()
@@ -32,11 +31,7 @@ const Main = () => {
       <BookSection
         rankingBooks={ranking?.viewCount ?? []}
         newBooks={ranking?.pubDate ?? []}
-        isLoading={isLoading}
-        onBookClick={handleBookClick}
-      />
-      <RatingRankingSection
-        books={ranking?.rating ?? []}
+        ratingBooks={ranking?.rating ?? []}
         isLoading={isLoading}
         onBookClick={handleBookClick}
       />

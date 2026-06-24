@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import styles from './main.module.css';
 
-const BookSection = ({ rankingBooks = [], newBooks = [], isLoading, onBookClick }) => {
+const BookSection = ({ rankingBooks = [], newBooks = [], ratingBooks = [], isLoading, onBookClick }) => {
   const [activeTab, setActiveTab] = useState('ranking');
   const [currentIndex, setCurrentIndex] = useState(0);
 
@@ -17,7 +17,7 @@ const BookSection = ({ rankingBooks = [], newBooks = [], isLoading, onBookClick 
     return <div className={styles.bookSection}>데이터를 불러오는 중입니다...</div>;
   }
 
-  const bookData = { ranking: rankingBooks, new: newBooks };
+  const bookData = { ranking: rankingBooks, new: newBooks, rating: ratingBooks };
   const currentBooks = bookData[activeTab];
 
   const prevSlide = () => {
@@ -47,6 +47,12 @@ const BookSection = ({ rankingBooks = [], newBooks = [], isLoading, onBookClick 
             onClick={() => setActiveTab('new')}
           >
             신작
+          </button>
+          <button
+            className={activeTab === 'rating' ? styles.activeTab : styles.tab}
+            onClick={() => setActiveTab('rating')}
+          >
+            별점 랭킹
           </button>
         </div>
       </div>
@@ -88,6 +94,13 @@ const BookSection = ({ rankingBooks = [], newBooks = [], isLoading, onBookClick 
                 <div className={styles.cardInfo}>
                   <h4>{book.title}</h4>
                   <p>{book.author}</p>
+                  {activeTab === 'rating' && book.averageRating > 0 && (
+                    <div className={styles.ratingBadge}>
+                      <span className={styles.starIcon}>&#9733;</span>
+                      <span>{book.averageRating.toFixed(1)}</span>
+                      <span className={styles.ratingCount}>({book.ratingCount})</span>
+                    </div>
+                  )}
                 </div>
               </div>
             ))}
