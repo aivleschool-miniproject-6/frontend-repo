@@ -55,6 +55,8 @@ const BookCoverEditor = () => {
   }, [id]);
 
   const handleTagSelect = (category, key) => {
+    if (isGenerating) return
+
     setSelectedOptions((prev) => ({
       ...prev,
       [category]: key,
@@ -62,6 +64,8 @@ const BookCoverEditor = () => {
   }
 
   const handleModelChange = (modelName) => {
+    if (isGenerating) return
+
     setApiConfig((prev) => ({
       model: modelName,
       quality: modelName === 'dall-e-3' ? 'High' : prev.quality
@@ -69,6 +73,8 @@ const BookCoverEditor = () => {
   };
 
   const handleGenerate = async () => {
+    if (isGenerating) return
+
     if (!userPrompt.trim()) {
       alert('어떤 스타일의 표지를 원하시는지 프롬프트를 작성해주세요!')
       return
@@ -113,6 +119,8 @@ const BookCoverEditor = () => {
   }
 
   const handleSave = async () => {
+    if (isGenerating) return
+
     if (selectedImageIndex === null) {
       alert('저장할 표지 이미지를 선택해주세요.');
       return;
@@ -155,8 +163,17 @@ const BookCoverEditor = () => {
             <div 
               key={index} 
               className={`${styles.imageSlot} ${selectedImageIndex === index ? styles.activeSlot : ''}`}
-              onClick={() => generatedImages[index] && setSelectedImageIndex(index)}
-              style={{ cursor: generatedImages[index] ? 'pointer' : 'default' }}
+              onClick={() => {
+                if (isGenerating) return
+                if (generatedImages[index]) setSelectedImageIndex(index)
+              }}
+              style={{
+                cursor: isGenerating
+                  ? 'not-allowed'
+                  : generatedImages[index]
+                    ? 'pointer'
+                    : 'default'
+              }}
             >
               {isGenerating ? (
                 <div className={styles.loadingSpinner}>생성 중...</div>
@@ -175,7 +192,12 @@ const BookCoverEditor = () => {
 
         {selectedImageIndex !== null && (
           <div className={styles.applyWrapper}>
-            <button className={styles.applyBtn} onClick={handleSave}>
+            <button
+              type="button"
+              className={styles.applyBtn}
+              onClick={handleSave}
+              disabled={isGenerating}
+            >
               ✨ 선택한 이미지로 표지 수정 반영하기
             </button>
           </div>
@@ -190,6 +212,8 @@ const BookCoverEditor = () => {
             {['gpt-image-2', 'gpt-image-1', 'dall-e-3'].map((model) => (
               <button
                 key={model}
+                type="button"
+                disabled={isGenerating}
                 className={`${styles.tag} ${apiConfig.model === model ? styles.activeTag : ''}`}
                 onClick={() => handleModelChange(model)}
               >
@@ -206,12 +230,17 @@ const BookCoverEditor = () => {
             {['Low', 'Medium', 'High'].map((qualityLevel) => (
               <button
                 key={qualityLevel}
+                type="button"
+                disabled={isGenerating}
                 className={`${styles.tag} ${apiConfig.quality === qualityLevel ? styles.activeTag : ''}`}
                 onClick={() => {
+                  if (isGenerating) return
+
                   if (apiConfig.model === 'dall-e-3' && qualityLevel !== 'High') {
                     alert('DALL-E 3 모델은 고품질 모델이므로 High 퀄리티만 선택 가능합니다.');
                     return;
                   }
+
                   setApiConfig({ ...apiConfig, quality: qualityLevel });
                 }}
               >
@@ -227,6 +256,8 @@ const BookCoverEditor = () => {
             {Object.keys(STYLE_PRESETS).map((key) => (
               <button
                 key={key}
+                type="button"
+                disabled={isGenerating}
                 className={`${styles.tag} ${selectedOptions.style === key ? styles.activeTag : ''}`}
                 onClick={() => handleTagSelect('style', key)}
               >
@@ -242,6 +273,8 @@ const BookCoverEditor = () => {
             {Object.keys(BACKGROUND_PRESETS).map((key) => (
               <button
                 key={key}
+                type="button"
+                disabled={isGenerating}
                 className={`${styles.tag} ${selectedOptions.background === key ? styles.activeTag : ''}`}
                 onClick={() => handleTagSelect('background', key)}
               >
@@ -252,6 +285,8 @@ const BookCoverEditor = () => {
             {Object.keys(LIGHTING_PRESETS).map((key) => (
               <button
                 key={key}
+                type="button"
+                disabled={isGenerating}
                 className={`${styles.tag} ${selectedOptions.lighting === key ? styles.activeTag : ''}`}
                 onClick={() => handleTagSelect('lighting', key)}
               >
@@ -267,6 +302,8 @@ const BookCoverEditor = () => {
             {Object.keys(TYPOGRAPHY_PRESETS).map((key) => (
               <button
                 key={key}
+                type="button"
+                disabled={isGenerating}
                 className={`${styles.tag} ${selectedOptions.typography === key ? styles.activeTag : ''}`}
                 onClick={() => handleTagSelect('typography', key)}
               >
@@ -280,6 +317,7 @@ const BookCoverEditor = () => {
           <h3 className={styles.label}>프롬프트</h3>
           <textarea
             className={styles.promptInput}
+            disabled={isGenerating}
             placeholder="어떤 느낌의 표지를 원하시나요? 객체, 색감, 분위기 등을 자유롭게 적어주세요. (예: 어두운 숲 속 한가운데 밝게 빛나는 랜턴 하나)"
             value={userPrompt}
             onChange={(e) => setUserPrompt(e.target.value)}
@@ -287,7 +325,12 @@ const BookCoverEditor = () => {
         </div>
 
         <div className={styles.actionRow}>
-          <button className={styles.generateBtn} onClick={handleGenerate} disabled={isGenerating}>
+          <button
+            type="button"
+            className={styles.generateBtn}
+            onClick={handleGenerate}
+            disabled={isGenerating}
+          >
             {isGenerating ? '이미지 생성 중 (잠시만 기다려주세요)...' : '표지 후보 3장 생성하기'}
           </button>
         </div>
