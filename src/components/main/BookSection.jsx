@@ -7,9 +7,11 @@ const BookSection = ({ rankingBooks = [], newBooks = [], isLoading, onBookClick 
 
   const itemsPerPage = 4;
 
+  /* eslint-disable react-hooks/set-state-in-effect */
   useEffect(() => {
     setCurrentIndex(0);
   }, [activeTab]);
+  /* eslint-enable react-hooks/set-state-in-effect */
 
   if (isLoading) {
     return <div className={styles.bookSection}>데이터를 불러오는 중입니다...</div>;

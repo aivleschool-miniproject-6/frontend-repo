@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import AdvancedSearchPanel, { DEFAULT_ADVANCED_FILTERS, PRICE_MAX } from '../common/AdvancedSearchPanel';
+import AdvancedSearchPanel from '../common/AdvancedSearchPanel';
+import { DEFAULT_ADVANCED_FILTERS, PRICE_MAX } from '../common/filterConstants';
 import styles from './main.module.css';
 
 const SearchBar = () => {
