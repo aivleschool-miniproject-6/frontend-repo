@@ -1,4 +1,5 @@
 version: 0.2
+
 phases:
   install:
     runtime-versions:
@@ -26,6 +27,8 @@ artifacts:
     - "dist/**/*"
     - "appspec.yml"
     - "deploy-scripts/**/*"
+
 cache:
   paths:
     - node_modules/**/*
+

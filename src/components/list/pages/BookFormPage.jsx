@@ -202,6 +202,7 @@ export default function BookFormPage({ mode, id, onBack, onSaved }) {
   const set = (key, val) => {
     // 1. 기존의 객체 속성들을 불변성을 유지하며 복사
     setForm((prev) => ({ ...prev, [key]: val }))
+
     // 2. 변경을 원하는 키값만 덮어쓰기
     setChanged(true) 
     // 값이 입력되면 해당 필드의 에러 메시지는 실시간으로 삭제
@@ -459,7 +460,7 @@ export default function BookFormPage({ mode, id, onBack, onSaved }) {
               </div>
               <div>
                 <label style={s.label}>출판일</label>
-                <input style={s.input()} type="date" value={form.pubDate} onChange={(e) => set('pubDate', e.target.value)} />
+                <input style={s.input()} type="date" value={form.pubDate} min="0000-01-01" max="9999-12-31" onChange={(e) => set('pubDate', e.target.value)} />
               </div>
             </div>
             <div style={s.row}>
@@ -496,7 +497,7 @@ export default function BookFormPage({ mode, id, onBack, onSaved }) {
                 <label style={s.label}>AI 모델</label>
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
                   {['gpt-image-2', 'gpt-image-1', 'dall-e-3'].map((model) => (
-                    <button key={model} onClick={() => handleModelChange(model)}
+                    <button key={model} type="button" disabled={isGenerating} onClick={() => handleModelChange(model)}
                       style={{ padding: '4px 10px', borderRadius: 20, fontSize: 12, cursor: 'pointer', border: `0.5px solid ${apiConfig.model === model ? '#1a1a18' : 'rgba(0,0,0,0.22)'}`, background: apiConfig.model === model ? '#1a1a18' : '#fff', color: apiConfig.model === model ? '#fff' : '#1a1a18' }}>
                       {model === 'gpt-image-2' ? 'GPT Image 2' : 
                        model === 'gpt-image-1' ? 'GPT Image 1' : 'DALL-E 3'}
@@ -510,7 +511,7 @@ export default function BookFormPage({ mode, id, onBack, onSaved }) {
                 <label style={s.label}>이미지 퀄리티</label>
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
                   {['Low', 'Medium', 'High'].map((q) => (
-                    <button key={q} onClick={() => {
+                    <button key={q} type="button" disabled={isGenerating} onClick={() => {
                         if (apiConfig.model === 'dall-e-3' && q !== 'High') {
                           alert('DALL-E 3 모델은 고품질 모델이므로 High 퀄리티만 선택 가능합니다.');
                           return;
@@ -528,7 +529,7 @@ export default function BookFormPage({ mode, id, onBack, onSaved }) {
                 <label style={s.label}>스타일</label>
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
                   {Object.keys(STYLE_PRESETS).map((key) => (
-                    <button key={key} onClick={() => setAiOptions((p) => ({ ...p, style: key }))}
+                    <button key={key} type="button" disabled={isGenerating} onClick={() => setAiOptions((p) => ({ ...p, style: key }))}
                       style={{ padding: '4px 10px', borderRadius: 20, fontSize: 12, cursor: 'pointer', border: `0.5px solid ${aiOptions.style === key ? '#1a1a18' : 'rgba(0,0,0,0.22)'}`, background: aiOptions.style === key ? '#1a1a18' : '#fff', color: aiOptions.style === key ? '#fff' : '#1a1a18' }}>
                       {key}
                     </button>
@@ -540,7 +541,7 @@ export default function BookFormPage({ mode, id, onBack, onSaved }) {
                 <label style={s.label}>배경 / 조명</label>
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, alignItems: 'center' }}>
                   {Object.keys(BACKGROUND_PRESETS).map((key) => (
-                    <button key={key} onClick={() => setAiOptions((p) => ({ ...p, background: key }))}
+                    <button key={key} type="button" disabled={isGenerating} onClick={() => setAiOptions((p) => ({ ...p, background: key }))}
                       style={{ padding: '4px 10px', borderRadius: 20, fontSize: 12, cursor: 'pointer', border: `0.5px solid ${aiOptions.background === key ? '#1a1a18' : 'rgba(0,0,0,0.22)'}`, background: aiOptions.background === key ? '#1a1a18' : '#fff', color: aiOptions.background === key ? '#fff' : '#1a1a18' }}>
                       {key}
                     </button>
@@ -559,7 +560,7 @@ export default function BookFormPage({ mode, id, onBack, onSaved }) {
                 <label style={s.label}>타이포그래피</label>
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
                   {Object.keys(TYPOGRAPHY_PRESETS).map((key) => (
-                    <button key={key} onClick={() => setAiOptions((p) => ({ ...p, typography: key }))}
+                    <button key={key} type="button" disabled={isGenerating} onClick={() => setAiOptions((p) => ({ ...p, typography: key }))}
                       style={{ padding: '4px 10px', borderRadius: 20, fontSize: 12, cursor: 'pointer', border: `0.5px solid ${aiOptions.typography === key ? '#1a1a18' : 'rgba(0,0,0,0.22)'}`, background: aiOptions.typography === key ? '#1a1a18' : '#fff', color: aiOptions.typography === key ? '#fff' : '#1a1a18' }}>
                       {key}
                     </button>
@@ -569,7 +570,12 @@ export default function BookFormPage({ mode, id, onBack, onSaved }) {
 
               <div style={s.formGroup}>
                 <label style={s.label}>프롬프트</label>
-                <textarea style={s.textarea(false)} placeholder="어떤 느낌의 표지를 원하시나요? 객체, 색감, 분위기 등을 자유롭게 적어주세요." value={aiPrompt} onChange={(e) => setAiPrompt(e.target.value)} />
+                <textarea
+                  style={s.textarea(false)}
+                  disabled={isGenerating}
+                  placeholder="어떤 느낌의 표지를 원하시나요? 객체, 색감, 분위기 등을 자유롭게 적어주세요."
+                  value={aiPrompt}
+                  onChange={(e) => setAiPrompt(e.target.value)} />
               </div>
 
               <button onClick={handleGenerate} disabled={isGenerating}
