@@ -1,21 +1,31 @@
 version: 0.2
-
 phases:
   install:
+    runtime-versions:
+      nodejs: 20
     commands:
-      - echo "Install phase"
+      - echo Installing dependencies...
+      - npm ci
 
   pre_build:
     commands:
-      - echo "Pre-build phase"
-      - echo "Current files:"
-      - ls -la
+      - echo Running lint...
+      - npm run lint || true
 
   build:
     commands:
-      - echo "Build phase"
-      - echo "CI pipeline is working"
+      - echo Build started on `date`
+      - npm run build
 
   post_build:
     commands:
-      - echo "Build completed successfully"
+      - echo Build completed on `date`
+
+artifacts:
+  files:
+    - "dist/**/*"
+    - "appspec.yml"
+    - "deploy-scripts/**/*"
+cache:
+  paths:
+    - node_modules/**/*

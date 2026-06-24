@@ -6,6 +6,14 @@ import {
   TYPOGRAPHY_PRESETS,
   compressImageDataUrl,
 } from '../../../util/bookCoverService'
+
+import {
+  getPresets,
+  createPreset,
+  updatePreset,
+  deletePreset,
+} from '../../../api/presetApi'
+
 import { useAuth } from '../../../context/AuthContext'
 
 const API = `${import.meta.env.VITE_API_BASE_URL}/books`
@@ -101,6 +109,9 @@ export default function BookFormPage({ mode, id, onBack, onSaved }) {
   })
 
   const [aiPrompt, setAiPrompt] = useState('')
+  const [presets, setPresets] = useState([])
+  const [selectedPresetId, setSelectedPresetId] = useState('')
+  const [presetName, setPresetName] = useState('')
   const [generatedImages, setGeneratedImages] = useState([null, null, null])
   const [isGenerating, setIsGenerating] = useState(false)
   const [selectedImageIndex, setSelectedImageIndex] = useState(null)
@@ -140,6 +151,54 @@ export default function BookFormPage({ mode, id, onBack, onSaved }) {
     load()
   }, [id, isEdit])
 
+  useEffect(() => {
+    if (!token) return
+
+    const loadPresets = async () => {
+      try {
+        const data = await getPresets(token)
+        setPresets(data)
+      } catch (error) {
+          console.error('프리셋 목록 조회 실패:', error)
+      }
+    }
+  loadPresets()
+}, [token])
+
+  const applyPreset = (presetId) => {
+    const preset = presets.find((p) => String(p.id) === String(presetId))
+    if (!preset) return
+
+    setSelectedPresetId(presetId)
+    setPresetName(preset.name || '')
+    setAiPrompt(preset.prompt || '')
+    setAiOptions({
+      style: preset.style || aiOptions.style,
+      background: preset.background || aiOptions.background,
+      lighting: preset.lighting || aiOptions.lighting,
+      typography: preset.typography || aiOptions.typography,
+    })
+    setApiConfig({
+      model: preset.model || 'gpt-image-2',
+      quality: preset.quality || 'Medium',
+    })
+  }
+
+  const buildPresetPayload = () => ({
+    name: presetName,
+    prompt: aiPrompt,
+    style: aiOptions.style,
+    background: aiOptions.background,
+    lighting: aiOptions.lighting,
+    typography: aiOptions.typography,
+    model: apiConfig.model,
+    quality: apiConfig.quality,
+  })
+  const refreshPresets = async () => {
+    const data = await getPresets(token)
+    setPresets(data)
+  }
+
   const set = (key, val) => {
     // 1. 기존의 객체 속성들을 불변성을 유지하며 복사
     setForm((prev) => ({ ...prev, [key]: val }))
@@ -177,6 +236,59 @@ export default function BookFormPage({ mode, id, onBack, onSaved }) {
     }
     setErrors(e)
     return Object.keys(e).length === 0
+  }
+
+  const handleCreatePreset = async () => {
+    if (!token) {
+      alert('로그인이 필요합니다.')
+      return
+    }
+    if (!presetName.trim()) {
+      alert('프리셋 이름을 입력해주세요.')
+      return
+    }
+    try {
+      await createPreset(token, buildPresetPayload())
+      await refreshPresets()
+      alert('프리셋이 저장되었습니다.')
+    } catch (error) {
+      console.error(error)
+      alert('프리셋 저장에 실패했습니다.')
+    }
+  }
+
+  const handleUpdatePreset = async () => {
+    if (!selectedPresetId) {
+      alert('수정할 프리셋을 선택해주세요.')
+      return
+    }
+    try {
+      await updatePreset(token, selectedPresetId, buildPresetPayload())
+      await refreshPresets()
+      alert('프리셋이 수정되었습니다.')
+    } catch (error) {
+      console.error(error)
+      alert('프리셋 수정에 실패했습니다.')
+    }
+  }
+
+  const handleDeletePreset = async () => {
+    if (!selectedPresetId) {
+      alert('삭제할 프리셋을 선택해주세요.')
+      return
+    }
+    if (!confirm('선택한 프리셋을 삭제할까요?')) return
+
+    try {
+      await deletePreset(token, selectedPresetId)
+      setSelectedPresetId('')
+      setPresetName('')
+      await refreshPresets()
+      alert('프리셋이 삭제되었습니다.')
+    } catch (error) {
+      console.error(error)
+      alert('프리셋 삭제에 실패했습니다.')
+    }
   }
 
   const handleGenerate = async () => {
@@ -376,6 +488,8 @@ export default function BookFormPage({ mode, id, onBack, onSaved }) {
                 <i className="ti ti-wand" /> AI 표지 생성
                 <span style={{ fontSize: 11, fontWeight: 400, marginLeft: 4 }}>(선택)</span>
               </div>
+
+               
 
               {/* AI 모델 선택 버튼 렌더링 */}
               <div style={s.formGroup}>
