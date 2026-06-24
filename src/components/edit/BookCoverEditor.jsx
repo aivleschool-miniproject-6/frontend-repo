@@ -16,6 +16,7 @@ const BookCoverEditor = () => {
   const { token } = useAuth()
 
   const [hasCover, setHasCover] = useState(false)
+
   const [userPrompt, setUserPrompt] = useState('')
 
   const [selectedOptions, setSelectedOptions] = useState({
@@ -27,7 +28,7 @@ const BookCoverEditor = () => {
 
   const [apiConfig, setApiConfig] = useState({
     model: 'gpt-image-2',
-    quality: 'Medium',
+    quality: 'Medium', // Low, Medium, High UI용 상태
   })
 
   const [generatedImages, setGeneratedImages] = useState([null, null, null])
@@ -37,20 +38,21 @@ const BookCoverEditor = () => {
   useEffect(() => {
     const fetchBookData = async () => {
       try {
-        const targetId = id || 101
-        const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/books/${targetId}`)
-
-        if (!response.ok) throw new Error('책 데이터를 불러오지 못했습니다.')
-
-        const data = await response.json()
-        setHasCover(!!data.coverImageUrl)
+        const targetId = id || 101;
+        const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/books/${targetId}`);
+        
+        if (!response.ok) throw new Error('책 데이터를 불러오지 못했습니다.');
+        
+        const data = await response.json();
+        
+        setHasCover(!!data.coverImageUrl);
       } catch (error) {
-        console.error('DB 연동 에러:', error)
+        console.error('DB 연동 에러:', error);
       }
-    }
+    };
 
-    fetchBookData()
-  }, [id])
+    fetchBookData();
+  }, [id]);
 
   const handleTagSelect = (category, key) => {
     if (isGenerating) return
@@ -66,23 +68,9 @@ const BookCoverEditor = () => {
 
     setApiConfig((prev) => ({
       model: modelName,
-      quality: modelName === 'dall-e-3' ? 'High' : prev.quality,
-    }))
-  }
-
-  const handleQualityChange = (qualityLevel) => {
-    if (isGenerating) return
-
-    if (apiConfig.model === 'dall-e-3' && qualityLevel !== 'High') {
-      alert('DALL-E 3 모델은 고품질 모델이므로 High 퀄리티만 선택 가능합니다.')
-      return
-    }
-
-    setApiConfig((prev) => ({
-      ...prev,
-      quality: qualityLevel,
-    }))
-  }
+      quality: modelName === 'dall-e-3' ? 'High' : prev.quality
+    }));
+  };
 
   const handleGenerate = async () => {
     if (isGenerating) return
@@ -97,23 +85,21 @@ const BookCoverEditor = () => {
       setSelectedImageIndex(null)
       setGeneratedImages([null, null, null])
 
-      const requestBody = {
-        model: apiConfig.model,
-        quality: apiConfig.quality,
-        prompt: userPrompt,
-        style: selectedOptions.style,
-        background: selectedOptions.background,
-        lighting: selectedOptions.lighting,
-        typography: selectedOptions.typography,
-      }
-
       const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/books/${id}/cover/generate`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           ...(token ? { Authorization: `Bearer ${token}` } : {}),
         },
-        body: JSON.stringify(requestBody),
+        body: JSON.stringify({
+          model: apiConfig.model,
+          quality: apiConfig.quality,
+          prompt: userPrompt,
+          style: selectedOptions.style,
+          background: selectedOptions.background,
+          lighting: selectedOptions.lighting,
+          typography: selectedOptions.typography,
+        }),
       })
 
       if (!response.ok) {
@@ -136,18 +122,16 @@ const BookCoverEditor = () => {
     if (isGenerating) return
 
     if (selectedImageIndex === null) {
-      alert('저장할 표지 이미지를 선택해주세요.')
-      return
+      alert('저장할 표지 이미지를 선택해주세요.');
+      return;
     }
 
     try {
-      const targetId = id || 101
-      const coverImageUrl = await compressImageDataUrl(generatedImages[selectedImageIndex])
-
+      const targetId = id || 101;
+      const coverImageUrl = await compressImageDataUrl(generatedImages[selectedImageIndex]);
       const saveEndpoint = hasCover
         ? `${import.meta.env.VITE_API_BASE_URL}/books/${targetId}/cover-editor`
-        : `${import.meta.env.VITE_API_BASE_URL}/books/${targetId}/cover`
-
+        : `${import.meta.env.VITE_API_BASE_URL}/books/${targetId}/cover`;
       const response = await fetch(saveEndpoint, {
         method: 'PATCH',
         headers: {
@@ -155,42 +139,40 @@ const BookCoverEditor = () => {
           ...(token ? { Authorization: `Bearer ${token}` } : {}),
         },
         body: JSON.stringify({
-          coverImageUrl,
+          coverImageUrl
         }),
-      })
+      });
 
       if (response.ok) {
-        alert('표지가 성공적으로 수정되었습니다!')
-        navigate(-1)
+        alert('표지가 성공적으로 수정되었습니다!');
+        navigate(-1);
       } else {
-        throw new Error('저장 실패')
+        throw new Error('저장 실패');
       }
     } catch (error) {
-      console.error(error)
-      alert('표지 저장 중 오류가 발생했습니다.')
+      console.error(error);
+      alert('표지 저장 중 오류가 발생했습니다.');
     }
-  }
+  };
 
   return (
     <div className={styles.container}>
       <div className={styles.glassContainer}>
         <div className={styles.previewSection}>
           {[0, 1, 2].map((index) => (
-            <div
-              key={index}
+            <div 
+              key={index} 
               className={`${styles.imageSlot} ${selectedImageIndex === index ? styles.activeSlot : ''}`}
               onClick={() => {
                 if (isGenerating) return
-                if (generatedImages[index]) {
-                  setSelectedImageIndex(index)
-                }
+                if (generatedImages[index]) setSelectedImageIndex(index)
               }}
               style={{
                 cursor: isGenerating
                   ? 'not-allowed'
                   : generatedImages[index]
                     ? 'pointer'
-                    : 'default',
+                    : 'default'
               }}
             >
               {isGenerating ? (
@@ -226,6 +208,7 @@ const BookCoverEditor = () => {
         <div className={styles.optionsRow}>
           <h3 className={styles.label}>AI 모델</h3>
           <div className={styles.tagGroup}>
+            {/* 요청하신 모델 3가지만 출력되도록 수정 */}
             {['gpt-image-2', 'gpt-image-1', 'dall-e-3'].map((model) => (
               <button
                 key={model}
@@ -234,11 +217,8 @@ const BookCoverEditor = () => {
                 className={`${styles.tag} ${apiConfig.model === model ? styles.activeTag : ''}`}
                 onClick={() => handleModelChange(model)}
               >
-                {model === 'gpt-image-2'
-                  ? 'GPT Image 2'
-                  : model === 'gpt-image-1'
-                    ? 'GPT Image 1'
-                    : 'DALL-E 3'}
+                {model === 'gpt-image-2' ? 'GPT Image 2' : 
+                 model === 'gpt-image-1' ? 'GPT Image 1' : 'DALL-E 3'}
               </button>
             ))}
           </div>
@@ -253,7 +233,16 @@ const BookCoverEditor = () => {
                 type="button"
                 disabled={isGenerating}
                 className={`${styles.tag} ${apiConfig.quality === qualityLevel ? styles.activeTag : ''}`}
-                onClick={() => handleQualityChange(qualityLevel)}
+                onClick={() => {
+                  if (isGenerating) return
+
+                  if (apiConfig.model === 'dall-e-3' && qualityLevel !== 'High') {
+                    alert('DALL-E 3 모델은 고품질 모델이므로 High 퀄리티만 선택 가능합니다.');
+                    return;
+                  }
+
+                  setApiConfig({ ...apiConfig, quality: qualityLevel });
+                }}
               >
                 {qualityLevel}
               </button>
@@ -292,9 +281,7 @@ const BookCoverEditor = () => {
                 {key}
               </button>
             ))}
-
             <span className={styles.divider}>|</span>
-
             {Object.keys(LIGHTING_PRESETS).map((key) => (
               <button
                 key={key}
