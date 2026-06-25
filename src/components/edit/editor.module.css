@@ -1,93 +1,84 @@
 .container {
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 30px 20px;
+  min-height: 100vh;
+  padding: 34px 24px 52px;
+  background:
+    radial-gradient(circle at top left, rgba(255, 255, 255, 0.86), transparent 34%),
+    linear-gradient(135deg, #f5f1e8 0%, #ece7dc 45%, #e6e0d4 100%);
+  color: #1f1f1b;
   font-family: 'Pretendard', sans-serif;
 }
 
-.header {
-  text-align: center;
-  margin-bottom: 40px;
-}
-
-.title {
-  font-size: 2rem;
-  font-weight: 800;
-  color: #2b2b2b;
-  letter-spacing: -0.5px;
-}
-
 .glassContainer {
-  margin-bottom: 40px;
-  padding: 50px 40px;
+  max-width: 1120px;
+  margin: 0 auto 24px;
+  padding: 30px;
+  border: 1px solid rgba(42, 38, 31, 0.08);
   border-radius: 24px;
-  background: linear-gradient(135deg, #d4fc79 0%, #96e6a1 100%);
-  position: relative;
-  overflow: hidden;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  box-shadow: 0 15px 35px rgba(0, 0, 0, 0.05);
+  background: rgba(255, 255, 255, 0.92);
+  box-shadow:
+    0 18px 45px rgba(64, 54, 38, 0.08),
+    0 2px 8px rgba(64, 54, 38, 0.04);
 }
 
 .previewSection {
-  display: flex;
-  justify-content: center;
-  gap: 30px;
-  width: 100%;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 18px;
 }
 
 .imageSlot {
-  flex: 1;
-  max-width: 300px;
+  position: relative;
   aspect-ratio: 2 / 3;
-  
-  background: rgba(255, 255, 255, 0.3);
-  backdrop-filter: blur(15px);
-  -webkit-backdrop-filter: blur(15px);
-  border: 1px solid rgba(255, 255, 255, 0.6);
-  box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.1);
-  
-  border-radius: 16px;
+  overflow: hidden;
+  border: 2px solid rgba(56, 47, 34, 0.08);
+  border-radius: 18px;
+  background:
+    linear-gradient(135deg, #faf7f1 0%, #eee8dd 100%);
   display: flex;
   align-items: center;
   justify-content: center;
-  overflow: hidden;
-  transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
-  outline: 4px solid transparent;
+  transition:
+    transform 0.18s ease,
+    box-shadow 0.18s ease,
+    border-color 0.18s ease;
 }
 
 .imageSlot:hover {
-  transform: translateY(-5px);
-  box-shadow: 0 15px 40px rgba(31, 38, 135, 0.15);
-  background: rgba(255, 255, 255, 0.4);
+  transform: translateY(-3px);
+  box-shadow: 0 16px 28px rgba(49, 41, 31, 0.15);
 }
 
 .activeSlot {
-  outline: 4px solid #fff;
-  transform: scale(1.05) translateY(-5px);
-  box-shadow: 0 0 25px rgba(255, 255, 255, 0.8), 0 10px 40px rgba(31, 38, 135, 0.2);
-  background: rgba(255, 255, 255, 0.6);
+  border-color: #2b2823;
+  box-shadow:
+    0 0 0 4px rgba(43, 40, 35, 0.12),
+    0 16px 30px rgba(49, 41, 31, 0.18);
+}
+
+.activeSlot::after {
+  content: '선택됨';
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  padding: 5px 9px;
+  border-radius: 999px;
+  background: rgba(43, 40, 35, 0.9);
+  color: #fff;
+  font-size: 11px;
+  font-weight: 800;
 }
 
 .slotText {
-  font-size: 1.2rem;
-  color: rgba(0, 0, 0, 0.4);
+  color: #aaa095;
+  font-size: 13px;
   font-weight: 700;
-  letter-spacing: 1px;
 }
 
 .loadingSpinner {
-  font-size: 1.1rem;
-  font-weight: bold;
-  color: #333;
-  animation: pulse 1.5s infinite;
-}
-
-@keyframes pulse {
-  0% { opacity: 0.6; }
-  50% { opacity: 1; }
-  100% { opacity: 0.6; }
+  color: #8e8377;
+  font-size: 13px;
+  font-weight: 800;
+  animation: pulse 1.4s infinite;
 }
 
 .generatedImg {
@@ -97,136 +88,538 @@
 }
 
 .applyWrapper {
-  margin-top: 40px;
-  animation: slideUp 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+  display: flex;
+  justify-content: center;
+  margin-top: 22px;
 }
 
 .applyBtn {
-  background: #ffffff;
-  color: #1a1a1a;
+  height: 44px;
+  padding: 0 22px;
   border: none;
-  padding: 18px 50px;
-  font-size: 1.2rem;
-  font-weight: 800;
-  border-radius: 50px;
+  border-radius: 14px;
+  background: linear-gradient(135deg, #24221e 0%, #3a3329 100%);
+  color: #fff;
+  font-size: 14px;
+  font-weight: 850;
   cursor: pointer;
-  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
-  transition: all 0.3s ease;
+  box-shadow: 0 12px 24px rgba(54, 43, 30, 0.22);
+  transition:
+    transform 0.16s ease,
+    box-shadow 0.16s ease,
+    background 0.16s ease;
 }
 
-.applyBtn:hover {
-  transform: translateY(-3px) scale(1.02);
-  box-shadow: 0 15px 35px rgba(0, 0, 0, 0.15);
+.applyBtn:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 16px 28px rgba(54, 43, 30, 0.28);
 }
 
-@keyframes slideUp {
-  0% { opacity: 0; transform: translateY(20px); }
-  100% { opacity: 1; transform: translateY(0); }
+.applyBtn:disabled {
+  cursor: not-allowed;
+  background: #b8b1a6;
+  box-shadow: none;
 }
 
 .controlPanel {
-  background-color: #fcfcfc; 
-  padding: 40px;
-  border-radius: 20px;
-  border: 1px solid #eee;
-  box-shadow: 0 5px 20px rgba(0,0,0,0.02);
+  max-width: 1120px;
+  margin: 0 auto;
+  padding: 28px;
+  border: 1px solid rgba(42, 38, 31, 0.08);
+  border-radius: 24px;
+  background: rgba(255, 255, 255, 0.92);
+  box-shadow:
+    0 18px 45px rgba(64, 54, 38, 0.08),
+    0 2px 8px rgba(64, 54, 38, 0.04);
 }
 
-.optionsRow, .promptRow {
+.editorHeader {
   display: flex;
-  margin-bottom: 25px;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 26px;
+  padding-bottom: 20px;
+  border-bottom: 1px solid rgba(42, 38, 31, 0.08);
+}
+
+.editorTitle {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  color: #2b2823;
+  font-size: 18px;
+  font-weight: 850;
+  letter-spacing: -0.3px;
+}
+
+.editorTitle i {
+  color: #9a7b4f;
+}
+
+.editorSubTitle {
+  margin: 6px 0 0;
+  color: #80766a;
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.presetTopButtons {
+  display: flex;
+  gap: 8px;
+}
+
+.presetTopButton {
+  height: 34px;
+  min-width: 76px;
+  padding: 0 16px;
+  border: 1px solid #d8d1c6;
+  border-radius: 999px;
+  background: #f8f4ee;
+  color: #4f473d;
+  font-size: 13px;
+  font-weight: 800;
+  cursor: pointer;
+  transition: 0.17s ease;
+}
+
+.presetTopButton:hover {
+  border-color: #b99b6d;
+  background: #fff9ef;
+  color: #2f2a24;
+  transform: translateY(-1px);
+  box-shadow: 0 8px 16px rgba(88, 70, 43, 0.12);
+}
+
+.optionsRow,
+.promptRow {
+  display: flex;
   align-items: flex-start;
+  gap: 18px;
+  margin-bottom: 20px;
 }
 
 .label {
-  width: 130px;
-  font-size: 1.1rem;
-  font-weight: bold;
-  color: #444;
+  width: 120px;
+  flex-shrink: 0;
   margin: 0;
-  padding-top: 8px;
+  padding-top: 6px;
+  color: #6d645b;
+  font-size: 13px;
+  font-weight: 850;
 }
 
 .tagGroup {
   flex: 1;
   display: flex;
   flex-wrap: wrap;
-  gap: 10px;
+  gap: 8px;
   align-items: center;
 }
 
 .divider {
-  color: #ccc;
-  margin: 0 5px;
+  color: #d3cabc;
+  font-weight: 700;
 }
 
 .tag {
-  padding: 8px 18px;
-  border: 1px solid #e0e0e0;
-  background: white;
-  border-radius: 20px;
+  min-height: 31px;
+  padding: 6px 12px;
+  border: 1px solid #ddd5c9;
+  border-radius: 999px;
+  background: #fffdf9;
+  color: #5d554d;
+  font-size: 12px;
+  font-weight: 650;
   cursor: pointer;
-  font-size: 0.9rem;
-  color: #666;
-  font-weight: 500;
-  transition: all 0.2s;
+  transition: 0.16s ease;
 }
 
-.tag:hover {
-  border-color: #96e6a1;
-  color: #2b2b2b;
+.tag:hover:not(:disabled) {
+  border-color: #c2a276;
+  background: #fff8ed;
+  color: #2d2924;
+  transform: translateY(-1px);
 }
 
 .activeTag {
-  background: #f1fbe8;
-  border-color: #96e6a1;
-  color: #2d6a4f;
-  font-weight: bold;
+  border-color: #2b2823;
+  background: #2b2823;
+  color: #fff;
+  box-shadow: 0 8px 16px rgba(43, 40, 35, 0.18);
+}
+
+.tag:disabled {
+  cursor: not-allowed;
+  opacity: 0.58;
 }
 
 .promptInput {
   flex: 1;
-  height: 120px;
-  padding: 18px;
-  border: 1px solid #e0e0e0;
+  min-height: 118px;
+  padding: 12px 13px;
+  border: 1px solid #ded7cc;
   border-radius: 12px;
-  resize: none;
-  font-family: inherit;
-  font-size: 1rem;
-  color: #333;
-  transition: border-color 0.2s, box-shadow 0.2s;
+  background: #fffdf9;
+  color: #1f1f1b;
+  font-size: 13px;
+  line-height: 1.65;
+  resize: vertical;
+  outline: none;
+  transition:
+    border-color 0.18s ease,
+    box-shadow 0.18s ease,
+    background 0.18s ease;
+}
+
+.promptInput::placeholder {
+  color: #aaa095;
 }
 
 .promptInput:focus {
-  outline: none;
-  border-color: #96e6a1;
-  box-shadow: 0 0 0 3px rgba(150, 230, 161, 0.2);
+  border-color: #a8895b;
+  background: #fff;
+  box-shadow: 0 0 0 4px rgba(168, 137, 91, 0.14);
 }
 
 .actionRow {
   display: flex;
   justify-content: flex-end;
-  margin-top: 30px;
+  margin-top: 24px;
 }
 
 .generateBtn {
-  background: #1a1a1a;
-  color: white;
+  height: 44px;
+  padding: 0 22px;
   border: none;
-  padding: 16px 40px;
-  font-size: 1.1rem;
-  font-weight: bold;
-  border-radius: 12px;
+  border-radius: 14px;
+  background: linear-gradient(135deg, #2b2823 0%, #4a3d2d 100%);
+  color: #fff;
+  font-size: 14px;
+  font-weight: 850;
   cursor: pointer;
-  transition: background 0.2s, transform 0.1s;
+  box-shadow: 0 12px 24px rgba(54, 43, 30, 0.22);
+  transition:
+    transform 0.16s ease,
+    box-shadow 0.16s ease,
+    background 0.16s ease;
 }
 
 .generateBtn:hover:not(:disabled) {
-  background: #333;
-  transform: translateY(-2px);
+  transform: translateY(-1px);
+  box-shadow: 0 16px 28px rgba(54, 43, 30, 0.28);
 }
 
 .generateBtn:disabled {
-  background: #aaa;
   cursor: not-allowed;
+  background: #b8b1a6;
+  box-shadow: none;
+}
+
+/* 프리셋 모달 */
+
+.presetModalOverlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  background: rgba(31, 27, 22, 0.44);
+  backdrop-filter: blur(7px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  animation: modalFadeIn 0.16s ease;
+}
+
+.savePresetModal,
+.presetListModal {
+  position: relative;
+  width: min(430px, 100%);
+  border: 1px solid rgba(255, 255, 255, 0.55);
+  border-radius: 24px;
+  background:
+    linear-gradient(145deg, rgba(255, 255, 255, 0.96), rgba(247, 241, 231, 0.96));
+  box-shadow:
+    0 24px 70px rgba(25, 20, 15, 0.28),
+    inset 0 1px 0 rgba(255, 255, 255, 0.9);
+  padding: 30px;
+  animation: modalPop 0.18s ease;
+}
+
+.presetListModal {
+  width: min(680px, 100%);
+  max-height: 78vh;
+  overflow-y: auto;
+}
+
+.presetModalClose {
+  position: absolute;
+  top: 16px;
+  right: 18px;
+  width: 32px;
+  height: 32px;
+  border: none;
+  border-radius: 50%;
+  background: #f0e9df;
+  color: #5d554d;
+  font-size: 22px;
+  line-height: 1;
+  cursor: pointer;
+  transition: 0.16s ease;
+}
+
+.presetModalClose:hover {
+  background: #e2d7c8;
+  transform: rotate(90deg);
+}
+
+.presetModalTitle {
+  margin-bottom: 24px;
+  color: #211f1b;
+  font-size: 18px;
+  font-weight: 850;
+  letter-spacing: -0.3px;
+}
+
+.presetNameRow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 22px;
+}
+
+.presetNameLabel {
+  color: #5f574e;
+  font-size: 13px;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.presetNameInput {
+  flex: 1;
+  height: 40px;
+  border: none;
+  border-bottom: 2px solid #cfc4b4;
+  background: transparent;
+  color: #211f1b;
+  outline: none;
+  font-size: 14px;
+  font-weight: 600;
+  transition: 0.16s ease;
+}
+
+.presetNameInput:focus {
+  border-bottom-color: #3a3329;
+}
+
+.presetModalSaveButton {
+  width: 100%;
+  height: 42px;
+  border: none;
+  border-radius: 14px;
+  background: linear-gradient(135deg, #2b2823 0%, #4a3d2d 100%);
+  color: #fff;
+  font-size: 14px;
+  font-weight: 850;
+  cursor: pointer;
+  box-shadow: 0 12px 24px rgba(54, 43, 30, 0.22);
+  transition: 0.16s ease;
+}
+
+.presetModalSaveButton:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 16px 30px rgba(54, 43, 30, 0.28);
+}
+
+.presetList {
+  display: grid;
+  gap: 12px;
+}
+
+.presetCard {
+  position: relative;
+  padding: 17px;
+  border: 1px solid rgba(73, 62, 45, 0.09);
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.78);
+  box-shadow: 0 10px 24px rgba(51, 42, 30, 0.07);
+  transition: 0.16s ease;
+}
+
+.presetCard:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 16px 30px rgba(51, 42, 30, 0.12);
+}
+
+.presetCardTitle {
+  margin-bottom: 10px;
+  color: #22201c;
+  font-size: 15px;
+  font-weight: 850;
+}
+
+.presetInfo {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 5px 12px;
+  margin-bottom: 14px;
+  color: #71675c;
+  font-size: 12px;
+  line-height: 1.55;
+}
+
+.presetCardButtons {
+  display: flex;
+  gap: 8px;
+}
+
+.presetSelectButton,
+.presetDeleteButton {
+  height: 36px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 850;
+  cursor: pointer;
+  transition: 0.16s ease;
+}
+
+.presetSelectButton {
+  flex: 1;
+  border: none;
+  background: #2b2823;
+  color: #fff;
+}
+
+.presetSelectButton:hover {
+  background: #40382c;
+  transform: translateY(-1px);
+}
+
+.presetDeleteButton {
+  min-width: 72px;
+  border: 1px solid #e6b4aa;
+  background: #fff6f4;
+  color: #d55545;
+}
+
+.presetDeleteButton:hover {
+  background: #ffece8;
+  border-color: #df7a6b;
+  transform: translateY(-1px);
+}
+
+.emptyPresetText {
+  padding: 38px 0;
+  border: 1px dashed #d6cbbb;
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.52);
+  color: #8b8175;
+  font-size: 13px;
+  font-weight: 600;
+  text-align: center;
+}
+
+@keyframes pulse {
+  0% {
+    opacity: 0.55;
+  }
+
+  50% {
+    opacity: 1;
+  }
+
+  100% {
+    opacity: 0.55;
+  }
+}
+
+@keyframes modalFadeIn {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes modalPop {
+  from {
+    opacity: 0;
+    transform: translateY(8px) scale(0.98);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@media (max-width: 860px) {
+  .previewSection {
+    grid-template-columns: 1fr;
+  }
+
+  .imageSlot {
+    max-width: 300px;
+    width: 100%;
+    margin: 0 auto;
+  }
+
+  .editorHeader {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .presetTopButtons {
+    width: 100%;
+  }
+
+  .presetTopButton {
+    flex: 1;
+  }
+
+  .optionsRow,
+  .promptRow {
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .label {
+    width: auto;
+    padding-top: 0;
+  }
+
+  .promptInput {
+    width: 100%;
+  }
+
+  .actionRow {
+    justify-content: stretch;
+  }
+
+  .generateBtn {
+    width: 100%;
+  }
+}
+
+@media (max-width: 560px) {
+  .container {
+    padding: 20px 14px 36px;
+  }
+
+  .glassContainer,
+  .controlPanel {
+    padding: 20px;
+    border-radius: 18px;
+  }
+
+  .savePresetModal,
+  .presetListModal {
+    padding: 26px 22px;
+  }
+
+  .presetInfo {
+    grid-template-columns: 1fr;
+  }
 }
