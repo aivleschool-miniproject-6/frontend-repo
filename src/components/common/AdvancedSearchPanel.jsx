@@ -27,6 +27,8 @@ export default function AdvancedSearchPanel({ filters, onChange, onReset }) {
               className={styles.dateInput}
               type="date"
               value={filters.pubDateFrom}
+              min="0000-01-01"
+              max="9999-12-31"
               onChange={(e) => set('pubDateFrom', e.target.value)}
             />
             <span className={styles.dateSep}>~</span>
@@ -34,6 +36,8 @@ export default function AdvancedSearchPanel({ filters, onChange, onReset }) {
               className={styles.dateInput}
               type="date"
               value={filters.pubDateTo}
+              min="0000-01-01"
+              max="9999-12-31"
               onChange={(e) => set('pubDateTo', e.target.value)}
             />
           </div>

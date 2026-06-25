@@ -1,4 +1,6 @@
 import { useState, useEffect } from 'react'
+import './BookFormPage.css'
+
 import {
   STYLE_PRESETS,
   BACKGROUND_PRESETS,
@@ -6,94 +8,55 @@ import {
   TYPOGRAPHY_PRESETS,
   compressImageDataUrl,
 } from '../../../util/bookCoverService'
+
+import {
+  getPresets,
+  createPreset,
+  deletePreset,
+} from '../../../api/presetApi'
+
 import { useAuth } from '../../../context/AuthContext'
 
 const API = `${import.meta.env.VITE_API_BASE_URL}/books`
 
 const GENRES = ['소설', '인문', '에세이', '경제/경영', 'IT/컴퓨터', '자기계발']
 
-const s = {
-  page: { display: 'flex', flexDirection: 'column', height: '100vh', background: '#eeece6' },
-  topbar: {
-    background: '#fff', borderBottom: '0.5px solid rgba(0,0,0,0.12)',
-    padding: '0 20px', height: 52,
-    display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexShrink: 0,
-  },
-  backBtn: {
-    display: 'flex', alignItems: 'center', gap: 5, fontSize: 13,
-    color: '#6b6b67', background: 'none', border: 'none', cursor: 'pointer',
-  },
-  inner: { flex: 1, overflow: 'auto', padding: 24 },
-  wrap: { maxWidth: 680, margin: '0 auto' },
-  pageTitle: { fontSize: 18, fontWeight: 500, color: '#1a1a18', margin: 6 },
-  pageSub: { fontSize: 13, color: '#6b6b67', marginBottom: 20 },
-  card: {
-    background: '#fff', border: '0.5px solid rgba(0,0,0,0.12)',
-    borderRadius: 12, padding: 24, marginBottom: 14,
-  },
-  sectionTitle: {
-    fontSize: 13, fontWeight: 500, color: '#6b6b67',
-    marginBottom: 16, display: 'flex', alignItems: 'center', gap: 6,
-  },
-  formGroup: { marginBottom: 14 },
-  label: {
-    fontSize: 12, color: '#6b6b67',
-    display: 'block', marginBottom: 5 
-  },
-  req: { color: '#e74c3c' },
-  input: (err) => ({
-    width: '100%', padding: '8px 12px ', boxSizing:'border-box',
-    border: `0.5px solid ${err ? '#e74c3c' : 'rgba(0,0,0,0.22)'}`,
-    borderRadius: 8, fontSize: 13, background: '#fff', color: '#1a1a18', outline: 'none',
-  }),
-  textarea: (err) => ({
-    width: '100%', padding: '8px 12px',  boxSizing:'border-box',
-    border: `0.5px solid ${err ? '#e74c3c' : 'rgba(0,0,0,0.22)'}`,
-    borderRadius: 8, fontSize: 13, background: '#fff', color: '#1a1a18',
-    minHeight: 110, resize: 'vertical', lineHeight: 1.6, outline: 'none',
-  }),
-  select: (err) => ({
-    width: '100%', padding: '8px 12px ',
-    border: `0.5px solid ${err ? '#e74c3c' : 'rgba(0,0,0,0.22)'}`,
-    borderRadius: 8, fontSize: 13, background: '#fff', color: '#1a1a18', outline: 'none',
-  }),
-  errMsg: { fontSize: 11, color: '#e74c3c', marginTop: 4, display: 'flex', alignItems: 'center', gap: 3 },
-  charCount: { fontSize: 11, color: '#6b6b67', textAlign: 'right', marginTop: 3 },
-  row: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14, marginBottom: 14 },
-  foot: { display: 'flex', justifyContent: 'flex-end', gap: 8 },
-  cancelBtn: {
-    fontSize: 13, padding: '8px 16px', borderRadius: 8, cursor: 'pointer',
-    border: '0.5px solid rgba(0,0,0,0.22)', background: '#fff', color: '#1a1a18',
-  },
-  saveBtn: {
-    display: 'flex', alignItems: 'center', gap: 5,
-    fontSize: 13, fontWeight: 500, padding: '8px 16px', borderRadius: 8, cursor: 'pointer',
-    background: '#1a1a18', color: '#fff', border: 'none',
-  },
-  banner: {
-    background: '#fef9e7', border: '0.5px solid #f0c040',
-    borderRadius: 8, padding: '10px 14px', fontSize: 13, color: '#7d6608',
-    display: 'flex', alignItems: 'center', gap: 8, marginBottom: 14,
-  },
-}
-
 export default function BookFormPage({ mode, id, onBack, onSaved }) {
   const isEdit = mode === 'edit'
-  const { user, token } = useAuth()
 
-  // 하나의 숫자로 묶어 다루기 
+  const auth = useAuth()
+  const user = auth?.user
+
+  const token =
+    auth?.token ||
+    auth?.accessToken ||
+    localStorage.getItem('accessToken') ||
+    localStorage.getItem('token')
+
+  // 하나의 숫자로 묶어 다루기
   const [form, setForm] = useState({
-    title: '', author: '', content: '', genre: '',
-    publisher: '', pubDate: '', price: '', pages: '', isbn: '',
+    title: '',
+    author: '',
+    content: '',
+    genre: '',
+    publisher: '',
+    pubDate: '',
+    price: '',
+    pages: '',
+    isbn: '',
   })
+
   const [errors, setErrors] = useState({})
   const [changed, setChanged] = useState(false)
   const [loading, setLoading] = useState(isEdit)
 
-  const [aiOptions, setAiOptions] = useState({ 
-    style: '수채화', background: '베이지', lighting: '자연광', typography: '클래식 명조' 
+  const [aiOptions, setAiOptions] = useState({
+    style: '수채화',
+    background: '베이지',
+    lighting: '자연광',
+    typography: '클래식 명조',
   })
-  
+
   // 1. 모델과 퀄리티 상태 추가
   const [apiConfig, setApiConfig] = useState({
     model: 'gpt-image-2',
@@ -105,21 +68,141 @@ export default function BookFormPage({ mode, id, onBack, onSaved }) {
   const [isGenerating, setIsGenerating] = useState(false)
   const [selectedImageIndex, setSelectedImageIndex] = useState(null)
 
+  const [presets, setPresets] = useState([])
+  const [presetName, setPresetName] = useState('')
+  const [isSavePresetModalOpen, setIsSavePresetModalOpen] = useState(false)
+  const [isPresetModalOpen, setIsPresetModalOpen] = useState(false)
+
   // 2. 모델 변경 시 예외처리 핸들러 추가
   const handleModelChange = (modelName) => {
     setApiConfig((prev) => ({
       model: modelName,
-      quality: modelName === 'dall-e-3' ? 'High' : prev.quality
-    }));
-  };
+      quality: modelName === 'dall-e-3' ? 'High' : prev.quality,
+    }))
+  }
+
+  const normalizePresetList = (data) => {
+    if (Array.isArray(data)) return data
+    if (Array.isArray(data?.presets)) return data.presets
+    if (Array.isArray(data?.data)) return data.data
+    return []
+  }
+
+  const sortPresets = (data) => {
+    return [...normalizePresetList(data)].sort((a, b) => {
+      const dateA = a.createdAt ? new Date(a.createdAt).getTime() : Number(a.id)
+      const dateB = b.createdAt ? new Date(b.createdAt).getTime() : Number(b.id)
+
+      return dateB - dateA
+    })
+  }
+
+  const buildPresetPayload = () => ({
+    name: presetName.trim(),
+    model: apiConfig.model,
+    quality: apiConfig.quality,
+    style: aiOptions.style,
+    background: aiOptions.background,
+    lighting: aiOptions.lighting,
+    typography: aiOptions.typography,
+  })
+
+  const handleOpenSavePresetModal = () => {
+    if (!token) {
+      alert('로그인이 필요합니다.')
+      return
+    }
+
+    if (presets.length >= 5) {
+      alert('프리셋은 최대 5개까지 저장할 수 있습니다.')
+      return
+    }
+
+    setPresetName('')
+    setIsSavePresetModalOpen(true)
+  }
+
+  const handleCloseSavePresetModal = () => {
+    setPresetName('')
+    setIsSavePresetModalOpen(false)
+  }
+
+  const handleOpenPresetModal = () => {
+    if (!token) {
+      alert('로그인이 필요합니다.')
+      return
+    }
+
+    setIsPresetModalOpen(true)
+  }
+
+  const handleSavePreset = async () => {
+    if (!presetName.trim()) {
+      alert('프리셋 이름을 입력해주세요.')
+      return
+    }
+
+    if (presets.length >= 5) {
+      alert('프리셋은 최대 5개까지 저장할 수 있습니다.')
+      return
+    }
+
+    try {
+      console.log('프리셋 저장 token:', token)
+      console.log('프리셋 저장 payload:', buildPresetPayload())
+
+      const savedPreset = await createPreset(token, buildPresetPayload())
+
+      setPresets((prev) => sortPresets([savedPreset, ...prev]))
+      setPresetName('')
+      setIsSavePresetModalOpen(false)
+
+      alert('프리셋이 저장되었습니다.')
+    } catch (error) {
+      console.error(error)
+      alert(error.message || '프리셋 저장에 실패했습니다.')
+    }
+  }
+
+  const handleApplyPreset = (preset) => {
+    setApiConfig({
+      model: preset.model || 'gpt-image-2',
+      quality: preset.quality || 'Medium',
+    })
+
+    setAiOptions({
+      style: preset.style || aiOptions.style,
+      background: preset.background || aiOptions.background,
+      lighting: preset.lighting || aiOptions.lighting,
+      typography: preset.typography || aiOptions.typography,
+    })
+
+    setIsPresetModalOpen(false)
+  }
+
+  const handleDeletePreset = async (presetId) => {
+    if (!window.confirm('이 프리셋을 삭제할까요?')) return
+
+    try {
+      await deletePreset(token, presetId)
+
+      setPresets((prev) => prev.filter((preset) => preset.id !== presetId))
+    } catch (error) {
+      console.error(error)
+      alert(error.message || '프리셋 삭제에 실패했습니다.')
+    }
+  }
 
   // 수정 모드: 기존 데이터 로딩
   useEffect(() => {
     if (!isEdit) return
+
     const load = async () => {
-      try { /////fetch
+      try {
+        /////fetch
         const res = await fetch(`${API}/${id}`)
         const data = await res.json()
+
         setForm({
           title: data.title || '',
           author: data.author || '',
@@ -130,36 +213,56 @@ export default function BookFormPage({ mode, id, onBack, onSaved }) {
           price: data.price || '',
           pages: data.pages || '',
           isbn: data.isbn || '',
-        })      
-      } catch(err) {
+        })
+      } catch (err) {
         console.error('데이터를 불러오는 데 실패했습니다.', err)
       } finally {
         setLoading(false)
       }
     }
+
     load()
   }, [id, isEdit])
+
+  useEffect(() => {
+    if (!token) return
+
+    const loadPresets = async () => {
+      try {
+        const data = await getPresets(token)
+        setPresets(sortPresets(data))
+      } catch (error) {
+        console.error('프리셋 목록 조회 실패:', error)
+      }
+    }
+
+    loadPresets()
+  }, [token])
 
   const set = (key, val) => {
     // 1. 기존의 객체 속성들을 불변성을 유지하며 복사
     setForm((prev) => ({ ...prev, [key]: val }))
 
     // 2. 변경을 원하는 키값만 덮어쓰기
-    setChanged(true) 
+    setChanged(true)
+
     // 값이 입력되면 해당 필드의 에러 메시지는 실시간으로 삭제
-    if (errors[key]) setErrors((prev) => ({ ...prev, [key]: '' }))
+    if (errors[key]) {
+      setErrors((prev) => ({ ...prev, [key]: '' }))
+    }
   }
 
   const validate = () => {
     const e = {}
+
     if (!form.title.trim()) e.title = '제목은 필수 입력 항목입니다.'
     if (!form.author.trim()) e.author = '저자는 필수 입력 항목입니다.'
     if (!form.genre) e.genre = '장르는 필수 입력 항목입니다.'
-    
+
     if (!form.content.trim()) {
       e.content = '도서 내용은 필수 입력 항목입니다.'
     } else if (form.content.length > 500) {
-      // 도서 내용 최대 500자 제한 
+      // 도서 내용 최대 500자 제한
       e.content = '도서 내용은 500자까지 작성 가능합니다.'
     }
 
@@ -167,15 +270,19 @@ export default function BookFormPage({ mode, id, onBack, onSaved }) {
     if (form.price && Number(form.price) < 0) {
       e.price = '가격은 0원 이상이어야 합니다.'
     }
+
     if (form.pages && Number(form.pages) <= 0) {
       e.pages = '페이지 수는 1페이지 이상이어야 합니다.'
     }
+
     if (form.isbn && form.isbn.trim()) {
-      const cleanIsbn = form.isbn.replace(/[^0-9]/g, '') // 숫자만 추출
+      const cleanIsbn = form.isbn.replace(/[^0-9]/g, '')
+
       if (cleanIsbn.length !== 13) {
         e.isbn = 'ISBN은 정확히 13자리 숫자여야 합니다.'
       }
     }
+
     setErrors(e)
     return Object.keys(e).length === 0
   }
@@ -185,6 +292,7 @@ export default function BookFormPage({ mode, id, onBack, onSaved }) {
       alert('어떤 스타일의 표지를 원하시는지 프롬프트를 작성해주세요!')
       return
     }
+
     try {
       setIsGenerating(true)
       setSelectedImageIndex(null)
@@ -229,13 +337,14 @@ export default function BookFormPage({ mode, id, onBack, onSaved }) {
 
   const handleSave = async () => {
     if (!validate()) return
-    
+
     try {
       const now = new Date().toISOString()
+
       const coverImageUrl = (!isEdit && selectedImageIndex !== null)
         ? await compressImageDataUrl(generatedImages[selectedImageIndex])
         : ''
-        
+
       const body = {
         ...form,
         price: form.price ? Number(form.price) : null,
@@ -246,17 +355,18 @@ export default function BookFormPage({ mode, id, onBack, onSaved }) {
 
       /////fetch
       const authHeader = token ? { Authorization: `Bearer ${token}` } : {}
+
       const res = isEdit
         ? await fetch(`${API}/${id}`, {
-          method: 'PATCH',
-          headers: { 'Content-Type': 'application/json', ...authHeader },
-          body: JSON.stringify(body),
-        })
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json', ...authHeader },
+            body: JSON.stringify(body),
+          })
         : await fetch(API, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json', ...authHeader },
-          body: JSON.stringify(body),
-        })
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', ...authHeader },
+            body: JSON.stringify(body),
+          })
 
       if (!res.ok) {
         alert('저장에 실패했습니다. 백엔드 서버가 실행 중인지 확인하세요.')
@@ -270,234 +380,521 @@ export default function BookFormPage({ mode, id, onBack, onSaved }) {
     }
   }
 
-  if (loading) return <div style={{ padding: 40, color: '#6b6b67' }}>불러오는 중...</div>
+  if (loading) {
+    return <div className="book-form-loading">불러오는 중...</div>
+  }
 
   return (
-    <div style={s.page}>
-      <div style={s.topbar}>
-        <button style={s.backBtn} onClick={onBack}>
-          <i className="ti ti-arrow-left" /> {isEdit ? '상세 페이지로' : '도서 목록으로'}
+    <div className="book-form-page">
+      <div className="book-form-topbar">
+        <button className="book-form-back-btn" onClick={onBack}>
+          <i className="ti ti-arrow-left" />
+          {isEdit ? '상세 페이지로' : '도서 목록으로'}
         </button>
         <div />
       </div>
 
-      <div style={s.inner}>
-        <div style={s.wrap}>
-          <div style={s.pageTitle}>{isEdit ? '도서 수정' : '새 도서 등록'}</div>
-          {isEdit && <div style={s.pageSub}>ID {id}</div>}
+      <div className="book-form-inner">
+        <div className="book-form-wrap">
+          <div className="book-form-page-title">
+            {isEdit ? '도서 수정' : '새 도서 등록'}
+          </div>
+
+          {isEdit && <div className="book-form-page-sub">ID {id}</div>}
 
           {isEdit && changed && (
-            <div style={s.banner}>
-              <i className="ti ti-info-circle" /> 변경된 내용이 있습니다. 저장하기 버튼을 눌러 반영하세요.
+            <div className="book-form-banner">
+              <i className="ti ti-info-circle" />
+              변경된 내용이 있습니다. 저장하기 버튼을 눌러 반영하세요.
             </div>
           )}
 
           {/* 기본 정보 */}
-          <div style={s.card}>
-            <div style={s.sectionTitle}>
-              <i className="ti ti-info-circle" /> 기본 정보
-              <span style={{ fontSize: 11, fontWeight: 400, marginLeft: 4, color: '#e74c3c' }}>* 필수</span>
+          <div className="book-form-card">
+            <div className="book-form-section-title">
+              <i className="ti ti-info-circle" />
+              기본 정보
+              <span className="book-form-required-info">* 필수</span>
             </div>
-            <div style={s.formGroup}>
-              <label style={s.label}>제목 <span style={s.req}>*</span></label>
-              <input style={s.input(errors.title)} value={form.title} onChange={(e) => set('title', e.target.value)} placeholder="도서 제목" />
-              {errors.title && <div style={s.errMsg}><i className="ti ti-alert-circle" style={{ fontSize: 13 }} />{errors.title}</div>}
+
+            <div className="book-form-group">
+              <label className="book-form-label">
+                제목 <span className="book-form-required">*</span>
+              </label>
+              <input
+                className={`book-form-input ${errors.title ? 'is-error' : ''}`}
+                value={form.title}
+                onChange={(e) => set('title', e.target.value)}
+                placeholder="도서 제목"
+              />
+              {errors.title && (
+                <div className="book-form-error">
+                  <i className="ti ti-alert-circle" />
+                  {errors.title}
+                </div>
+              )}
             </div>
-            <div style={s.row}>
+
+            <div className="book-form-row">
               <div>
-                <label style={s.label}>저자 <span style={s.req}>*</span></label>
-                <input style={s.input(errors.author)} value={form.author} onChange={(e) => set('author', e.target.value)} placeholder="저자명" />
-                {errors.author && <div style={s.errMsg}><i className="ti ti-alert-circle" style={{ fontSize: 13 }} />{errors.author}</div>}
+                <label className="book-form-label">
+                  저자 <span className="book-form-required">*</span>
+                </label>
+                <input
+                  className={`book-form-input ${errors.author ? 'is-error' : ''}`}
+                  value={form.author}
+                  onChange={(e) => set('author', e.target.value)}
+                  placeholder="저자명"
+                />
+                {errors.author && (
+                  <div className="book-form-error">
+                    <i className="ti ti-alert-circle" />
+                    {errors.author}
+                  </div>
+                )}
               </div>
+
               <div>
-                <label style={s.label}>장르 <span style={s.req}>*</span></label>
-                <select style={s.select(errors.genre)} value={form.genre} onChange={(e) => set('genre', e.target.value)}>
+                <label className="book-form-label">
+                  장르 <span className="book-form-required">*</span>
+                </label>
+                <select
+                  className={`book-form-select ${errors.genre ? 'is-error' : ''}`}
+                  value={form.genre}
+                  onChange={(e) => set('genre', e.target.value)}
+                >
                   <option value="">장르 선택</option>
-                  {GENRES.map((g) => <option key={g}>{g}</option>)}
+                  {GENRES.map((g) => (
+                    <option key={g}>{g}</option>
+                  ))}
                 </select>
-                {errors.genre && <div style={s.errMsg}><i className="ti ti-alert-circle" style={{ fontSize: 13 }} />{errors.genre}</div>}
+                {errors.genre && (
+                  <div className="book-form-error">
+                    <i className="ti ti-alert-circle" />
+                    {errors.genre}
+                  </div>
+                )}
               </div>
             </div>
-            <div style={s.formGroup}>
-              <label style={s.label}>
-                도서 내용 <span style={s.req}>*</span>
-                <span style={{ fontWeight: 400, marginLeft: 4, color: '#6b6b67' }}>(AI 표지 생성에 활용됩니다)</span>
+
+            <div className="book-form-group">
+              <label className="book-form-label">
+                도서 내용 <span className="book-form-required">*</span>
+                <span className="book-form-label-note">
+                  (AI 표지 생성에 활용됩니다)
+                </span>
               </label>
               <textarea
-                style={s.textarea(errors.content)}
+                className={`book-form-textarea ${errors.content ? 'is-error' : ''}`}
                 value={form.content}
                 onChange={(e) => set('content', e.target.value)}
                 placeholder="줄거리, 주제, 핵심 내용을 입력하세요."
                 maxLength={500}
               />
-              {errors.content && <div style={s.errMsg}><i className="ti ti-alert-circle" style={{ fontSize: 13 }} />{errors.content}</div>}
-              <div style={s.charCount}>{form.content.length} / 500자</div>
+              {errors.content && (
+                <div className="book-form-error">
+                  <i className="ti ti-alert-circle" />
+                  {errors.content}
+                </div>
+              )}
+              <div className="book-form-char-count">
+                {form.content.length} / 500자
+              </div>
             </div>
           </div>
 
           {/* 상세 정보 */}
-          <div style={s.card}>
-            <div style={s.sectionTitle}>
-              <i className="ti ti-list-details" /> 상세 정보
-              <span style={{ fontSize: 11, fontWeight: 400, marginLeft: 4 }}>(선택)</span>
+          <div className="book-form-card">
+            <div className="book-form-section-title">
+              <i className="ti ti-list-details" />
+              상세 정보
+              <span className="book-form-optional">(선택)</span>
             </div>
-            <div style={s.row}>
+
+            <div className="book-form-row">
               <div>
-                <label style={s.label}>출판사</label>
-                <input style={s.input()} value={form.publisher} onChange={(e) => set('publisher', e.target.value)} placeholder="출판사명" />
+                <label className="book-form-label">출판사</label>
+                <input
+                  className="book-form-input"
+                  value={form.publisher}
+                  onChange={(e) => set('publisher', e.target.value)}
+                  placeholder="출판사명"
+                />
               </div>
+
               <div>
-                <label style={s.label}>출판일</label>
-                <input style={s.input()} type="date" value={form.pubDate} min="0000-01-01" max="9999-12-31" onChange={(e) => set('pubDate', e.target.value)} />
+                <label className="book-form-label">출판일</label>
+                <input
+                  className="book-form-input"
+                  type="date"
+                  value={form.pubDate}
+                  min="0000-01-01"
+                  max="9999-12-31"
+                  onChange={(e) => set('pubDate', e.target.value)}
+                />
               </div>
             </div>
-            <div style={s.row}>
+
+            <div className="book-form-row">
               <div>
-                <label style={s.label}>가격 (원)</label>
-                <input style={s.input(errors.price)} type="number" value={form.price} onChange={(e) => set('price', e.target.value)} placeholder="예: 16000" />
-                {errors.price && <div style={s.errMsg}><i className="ti ti-alert-circle" style={{ fontSize: 13 }} />{errors.price}</div>}
+                <label className="book-form-label">가격 (원)</label>
+                <input
+                  className={`book-form-input ${errors.price ? 'is-error' : ''}`}
+                  type="number"
+                  value={form.price}
+                  onChange={(e) => set('price', e.target.value)}
+                  placeholder="예: 16000"
+                />
+                {errors.price && (
+                  <div className="book-form-error">
+                    <i className="ti ti-alert-circle" />
+                    {errors.price}
+                  </div>
+                )}
               </div>
+
               <div>
-                <label style={s.label}>페이지 수</label>
-                <input style={s.input(errors.pages)} type="number" value={form.pages} onChange={(e) => set('pages', e.target.value)} placeholder="예: 280" />
-                {errors.pages && <div style={s.errMsg}><i className="ti ti-alert-circle" style={{ fontSize: 13 }} />{errors.pages}</div>}
+                <label className="book-form-label">페이지 수</label>
+                <input
+                  className={`book-form-input ${errors.pages ? 'is-error' : ''}`}
+                  type="number"
+                  value={form.pages}
+                  onChange={(e) => set('pages', e.target.value)}
+                  placeholder="예: 280"
+                />
+                {errors.pages && (
+                  <div className="book-form-error">
+                    <i className="ti ti-alert-circle" />
+                    {errors.pages}
+                  </div>
+                )}
               </div>
             </div>
+
             <div>
-              <label style={s.label}>ISBN</label>
-              <input style={s.input(errors.isbn)} value={form.isbn} onChange={(e) => set('isbn', e.target.value)} placeholder="13자리 ISBN" maxLength={13} />
-              {errors.isbn && <div style={s.errMsg}><i className="ti ti-alert-circle" style={{ fontSize: 13 }} />{errors.isbn}</div>}
+              <label className="book-form-label">ISBN</label>
+              <input
+                className={`book-form-input ${errors.isbn ? 'is-error' : ''}`}
+                value={form.isbn}
+                onChange={(e) => set('isbn', e.target.value)}
+                placeholder="13자리 ISBN"
+                maxLength={13}
+              />
+              {errors.isbn && (
+                <div className="book-form-error">
+                  <i className="ti ti-alert-circle" />
+                  {errors.isbn}
+                </div>
+              )}
             </div>
           </div>
 
           {/* AI 표지 생성 - 등록 모드 전용 */}
           {!isEdit && (
-            <div style={s.card}>
-              <div style={s.sectionTitle}>
-                <i className="ti ti-wand" /> AI 표지 생성
-                <span style={{ fontSize: 11, fontWeight: 400, marginLeft: 4 }}>(선택)</span>
+            <div className="book-form-card">
+              <div className="ai-cover-header">
+                <div className="ai-cover-title">
+                  <i className="ti ti-wand" />
+                  AI 표지 생성
+                  <span className="ai-cover-optional">(선택)</span>
+                </div>
+
+                <div className="preset-top-buttons">
+                  <button
+                    type="button"
+                    className="preset-top-button"
+                    onClick={handleOpenSavePresetModal}
+                  >
+                    저장
+                  </button>
+
+                  <button
+                    type="button"
+                    className="preset-top-button"
+                    onClick={handleOpenPresetModal}
+                  >
+                    프리셋
+                  </button>
+                </div>
               </div>
 
               {/* AI 모델 선택 버튼 렌더링 */}
-              <div style={s.formGroup}>
-                <label style={s.label}>AI 모델</label>
-                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+              <div className="book-form-group">
+                <label className="book-form-label">AI 모델</label>
+                <div className="option-button-group">
                   {['gpt-image-2', 'gpt-image-1', 'dall-e-3'].map((model) => (
-                    <button key={model} type="button" disabled={isGenerating} onClick={() => handleModelChange(model)}
-                      style={{ padding: '4px 10px', borderRadius: 20, fontSize: 12, cursor: 'pointer', border: `0.5px solid ${apiConfig.model === model ? '#1a1a18' : 'rgba(0,0,0,0.22)'}`, background: apiConfig.model === model ? '#1a1a18' : '#fff', color: apiConfig.model === model ? '#fff' : '#1a1a18' }}>
-                      {model === 'gpt-image-2' ? 'GPT Image 2' : 
-                       model === 'gpt-image-1' ? 'GPT Image 1' : 'DALL-E 3'}
+                    <button
+                      key={model}
+                      type="button"
+                      disabled={isGenerating}
+                      onClick={() => handleModelChange(model)}
+                      className={`option-chip ${apiConfig.model === model ? 'is-selected' : ''}`}
+                    >
+                      {model === 'gpt-image-2'
+                        ? 'GPT Image 2'
+                        : model === 'gpt-image-1'
+                          ? 'GPT Image 1'
+                          : 'DALL-E 3'}
                     </button>
                   ))}
                 </div>
               </div>
 
               {/* 이미지 퀄리티 선택 버튼 렌더링 */}
-              <div style={s.formGroup}>
-                <label style={s.label}>이미지 퀄리티</label>
-                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+              <div className="book-form-group">
+                <label className="book-form-label">이미지 퀄리티</label>
+                <div className="option-button-group">
                   {['Low', 'Medium', 'High'].map((q) => (
-                    <button key={q} type="button" disabled={isGenerating} onClick={() => {
+                    <button
+                      key={q}
+                      type="button"
+                      disabled={isGenerating}
+                      onClick={() => {
                         if (apiConfig.model === 'dall-e-3' && q !== 'High') {
-                          alert('DALL-E 3 모델은 고품질 모델이므로 High 퀄리티만 선택 가능합니다.');
-                          return;
+                          alert('DALL-E 3 모델은 고품질 모델이므로 High 퀄리티만 선택 가능합니다.')
+                          return
                         }
+
                         setApiConfig((p) => ({ ...p, quality: q }))
                       }}
-                      style={{ padding: '4px 10px', borderRadius: 20, fontSize: 12, cursor: 'pointer', border: `0.5px solid ${apiConfig.quality === q ? '#1a1a18' : 'rgba(0,0,0,0.22)'}`, background: apiConfig.quality === q ? '#1a1a18' : '#fff', color: apiConfig.quality === q ? '#fff' : '#1a1a18' }}>
+                      className={`option-chip ${apiConfig.quality === q ? 'is-selected' : ''}`}
+                    >
                       {q}
                     </button>
                   ))}
                 </div>
               </div>
 
-              <div style={s.formGroup}>
-                <label style={s.label}>스타일</label>
-                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+              <div className="book-form-group">
+                <label className="book-form-label">스타일</label>
+                <div className="option-button-group">
                   {Object.keys(STYLE_PRESETS).map((key) => (
-                    <button key={key} type="button" disabled={isGenerating} onClick={() => setAiOptions((p) => ({ ...p, style: key }))}
-                      style={{ padding: '4px 10px', borderRadius: 20, fontSize: 12, cursor: 'pointer', border: `0.5px solid ${aiOptions.style === key ? '#1a1a18' : 'rgba(0,0,0,0.22)'}`, background: aiOptions.style === key ? '#1a1a18' : '#fff', color: aiOptions.style === key ? '#fff' : '#1a1a18' }}>
+                    <button
+                      key={key}
+                      type="button"
+                      disabled={isGenerating}
+                      onClick={() => setAiOptions((p) => ({ ...p, style: key }))}
+                      className={`option-chip ${aiOptions.style === key ? 'is-selected' : ''}`}
+                    >
                       {key}
                     </button>
                   ))}
                 </div>
               </div>
 
-              <div style={s.formGroup}>
-                <label style={s.label}>배경 / 조명</label>
-                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, alignItems: 'center' }}>
+              <div className="book-form-group">
+                <label className="book-form-label">배경 / 조명</label>
+                <div className="option-button-group">
                   {Object.keys(BACKGROUND_PRESETS).map((key) => (
-                    <button key={key} type="button" disabled={isGenerating} onClick={() => setAiOptions((p) => ({ ...p, background: key }))}
-                      style={{ padding: '4px 10px', borderRadius: 20, fontSize: 12, cursor: 'pointer', border: `0.5px solid ${aiOptions.background === key ? '#1a1a18' : 'rgba(0,0,0,0.22)'}`, background: aiOptions.background === key ? '#1a1a18' : '#fff', color: aiOptions.background === key ? '#fff' : '#1a1a18' }}>
+                    <button
+                      key={key}
+                      type="button"
+                      disabled={isGenerating}
+                      onClick={() => setAiOptions((p) => ({ ...p, background: key }))}
+                      className={`option-chip ${aiOptions.background === key ? 'is-selected' : ''}`}
+                    >
                       {key}
                     </button>
                   ))}
-                  <span style={{ color: '#ccc' }}>|</span>
+
+                  <span className="option-divider">|</span>
+
                   {Object.keys(LIGHTING_PRESETS).map((key) => (
-                    <button key={key} onClick={() => setAiOptions((p) => ({ ...p, lighting: key }))}
-                      style={{ padding: '4px 10px', borderRadius: 20, fontSize: 12, cursor: 'pointer', border: `0.5px solid ${aiOptions.lighting === key ? '#1a1a18' : 'rgba(0,0,0,0.22)'}`, background: aiOptions.lighting === key ? '#1a1a18' : '#fff', color: aiOptions.lighting === key ? '#fff' : '#1a1a18' }}>
+                    <button
+                      key={key}
+                      type="button"
+                      disabled={isGenerating}
+                      onClick={() => setAiOptions((p) => ({ ...p, lighting: key }))}
+                      className={`option-chip ${aiOptions.lighting === key ? 'is-selected' : ''}`}
+                    >
                       {key}
                     </button>
                   ))}
                 </div>
               </div>
 
-              <div style={s.formGroup}>
-                <label style={s.label}>타이포그래피</label>
-                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+              <div className="book-form-group">
+                <label className="book-form-label">타이포그래피</label>
+                <div className="option-button-group">
                   {Object.keys(TYPOGRAPHY_PRESETS).map((key) => (
-                    <button key={key} type="button" disabled={isGenerating} onClick={() => setAiOptions((p) => ({ ...p, typography: key }))}
-                      style={{ padding: '4px 10px', borderRadius: 20, fontSize: 12, cursor: 'pointer', border: `0.5px solid ${aiOptions.typography === key ? '#1a1a18' : 'rgba(0,0,0,0.22)'}`, background: aiOptions.typography === key ? '#1a1a18' : '#fff', color: aiOptions.typography === key ? '#fff' : '#1a1a18' }}>
+                    <button
+                      key={key}
+                      type="button"
+                      disabled={isGenerating}
+                      onClick={() => setAiOptions((p) => ({ ...p, typography: key }))}
+                      className={`option-chip ${aiOptions.typography === key ? 'is-selected' : ''}`}
+                    >
                       {key}
                     </button>
                   ))}
                 </div>
               </div>
 
-              <div style={s.formGroup}>
-                <label style={s.label}>프롬프트</label>
+              <div className="book-form-group">
+                <label className="book-form-label">프롬프트</label>
                 <textarea
-                  style={s.textarea(false)}
+                  className="book-form-textarea"
                   disabled={isGenerating}
                   placeholder="어떤 느낌의 표지를 원하시나요? 객체, 색감, 분위기 등을 자유롭게 적어주세요."
                   value={aiPrompt}
-                  onChange={(e) => setAiPrompt(e.target.value)} />
+                  onChange={(e) => setAiPrompt(e.target.value)}
+                />
               </div>
 
-              <button onClick={handleGenerate} disabled={isGenerating}
-                style={{ width: '100%', padding: '10px 0', borderRadius: 8, fontSize: 13, fontWeight: 500, cursor: isGenerating ? 'not-allowed' : 'pointer', background: isGenerating ? '#aaa' : '#1a1a18', color: '#fff', border: 'none' }}>
+              <button
+                type="button"
+                onClick={handleGenerate}
+                disabled={isGenerating}
+                className={`generate-cover-button ${isGenerating ? 'is-generating' : ''}`}
+              >
                 {isGenerating ? '이미지 생성 중...' : '표지 후보 3장 생성하기'}
               </button>
 
-              <div style={{ display: 'flex', gap: 12, marginTop: 16 }}>
+              <div className="generated-image-list">
                 {[0, 1, 2].map((i) => (
-                  <div key={i} onClick={() => generatedImages[i] && setSelectedImageIndex(i)}
-                    style={{ flex: 1, aspectRatio: '2/3', borderRadius: 8, overflow: 'hidden', border: `2px solid ${selectedImageIndex === i ? '#1a1a18' : 'rgba(0,0,0,0.1)'}`, background: '#f5f5f3', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: generatedImages[i] ? 'pointer' : 'default' }}>
-                    {isGenerating
-                      ? <span style={{ fontSize: 11, color: '#aaa' }}>생성 중...</span>
-                      : generatedImages[i]
-                        ? <img src={generatedImages[i]} alt={`표지 후보 ${i + 1}`} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                        : <span style={{ fontSize: 11, color: '#bbb' }}>Preview {i + 1}</span>}
+                  <div
+                    key={i}
+                    onClick={() => generatedImages[i] && setSelectedImageIndex(i)}
+                    className={`generated-image-card ${selectedImageIndex === i ? 'is-selected' : ''} ${generatedImages[i] ? 'is-clickable' : ''}`}
+                  >
+                    {isGenerating ? (
+                      <span className="generated-image-placeholder is-loading">생성 중...</span>
+                    ) : generatedImages[i] ? (
+                      <img
+                        src={generatedImages[i]}
+                        alt={`표지 후보 ${i + 1}`}
+                        className="generated-image"
+                      />
+                    ) : (
+                      <span className="generated-image-placeholder">Preview {i + 1}</span>
+                    )}
                   </div>
                 ))}
               </div>
 
               {selectedImageIndex !== null && (
-                <div style={{ fontSize: 12, color: '#1a1a18', marginTop: 8, textAlign: 'center', fontWeight: 500 }}>
+                <div className="selected-cover-message">
                   ✓ {selectedImageIndex + 1}번 이미지가 표지로 등록됩니다.
                 </div>
               )}
             </div>
           )}
 
-          <div style={s.foot}>
-            <button style={s.cancelBtn} onClick={onBack}>취소</button>
-            <button style={s.saveBtn} onClick={handleSave}>
-              <i className="ti ti-check" /> {isEdit ? '저장하기' : '등록하기'}
+          <div className="book-form-foot">
+            <button className="book-form-cancel-btn" onClick={onBack}>
+              취소
+            </button>
+
+            <button className="book-form-save-btn" onClick={handleSave}>
+              <i className="ti ti-check" />
+              {isEdit ? '저장하기' : '등록하기'}
             </button>
           </div>
         </div>
       </div>
+
+      {isSavePresetModalOpen && (
+        <div className="preset-modal-overlay">
+          <div className="save-preset-modal">
+            <button
+              type="button"
+              className="preset-modal-close"
+              onClick={handleCloseSavePresetModal}
+            >
+              ×
+            </button>
+
+            <div className="preset-modal-title">저장 창</div>
+
+            <div className="preset-name-row">
+              <label className="preset-name-label">프리셋 이름 :</label>
+              <input
+                className="preset-name-input"
+                value={presetName}
+                onChange={(e) => setPresetName(e.target.value)}
+                placeholder="예: 해피목요일"
+                autoFocus
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') handleSavePreset()
+                }}
+              />
+            </div>
+
+            <button
+              type="button"
+              className="preset-modal-save-button"
+              onClick={handleSavePreset}
+            >
+              저장
+            </button>
+          </div>
+        </div>
+      )}
+
+      {isPresetModalOpen && (
+        <div className="preset-modal-overlay">
+          <div className="preset-list-modal">
+            <button
+              type="button"
+              className="preset-modal-close"
+              onClick={() => setIsPresetModalOpen(false)}
+            >
+              ×
+            </button>
+
+            <div className="preset-modal-title">프리셋 창</div>
+
+            {presets.length === 0 ? (
+              <div className="empty-preset-text">
+                저장된 프리셋이 없습니다.
+              </div>
+            ) : (
+              <div className="preset-list">
+                {presets.map((preset) => (
+                  <div key={preset.id} className="preset-card">
+                    <div className="preset-card-title">{preset.name}</div>
+
+                    <div className="preset-info">
+                      <div>
+                        AI 모델 : {
+                          preset.model === 'gpt-image-2'
+                            ? 'GPT Image 2'
+                            : preset.model === 'gpt-image-1'
+                              ? 'GPT Image 1'
+                              : 'DALL-E 3'
+                        }
+                      </div>
+                      <div>이미지 퀄리티 : {preset.quality}</div>
+                      <div>스타일 : {preset.style}</div>
+                      <div>배경 : {preset.background}</div>
+                      <div>조명 : {preset.lighting}</div>
+                      <div>타이포그래피 : {preset.typography}</div>
+                    </div>
+
+                    <div className="preset-card-buttons">
+                      <button
+                        type="button"
+                        className="preset-select-button"
+                        onClick={() => handleApplyPreset(preset)}
+                      >
+                        선택
+                      </button>
+
+                      <button
+                        type="button"
+                        className="preset-delete-button"
+                        onClick={() => handleDeletePreset(preset.id)}
+                      >
+                        삭제
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   )
 }
